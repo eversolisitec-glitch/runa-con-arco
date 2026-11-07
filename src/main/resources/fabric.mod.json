@@ -3,15 +3,20 @@
   "id": "runaarco",
   "version": "${version}",
   "name": "Runa del Arco",
-  "description": "Una runa mágica gigante aparece a la espalda de cualquier jugador que tense el arco.",
+  "description": "Una runa mágica gigante aparece a la espalda de cualquier jugador que tense el arco. Runas en archivos .runa y menú de configuración.",
   "environment": "client",
   "entrypoints": {
-    "client": ["com.runaarco.RunaArcoClient"]
+    "client": ["com.runaarco.RunaArcoClient"],
+    "modmenu": ["com.runaarco.RunaArcoModMenu"]
   },
   "depends": {
     "fabricloader": ">=0.18.4",
     "minecraft": "~26.1",
     "java": ">=25",
     "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*",
+    "cloth-config": "*"
   }
 }

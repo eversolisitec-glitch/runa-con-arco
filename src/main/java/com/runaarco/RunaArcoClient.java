@@ -24,25 +24,14 @@ import java.util.List;
 public class RunaArcoClient implements ClientModInitializer {
 	public static final String MOD_ID = "runaarco";
 
-	// ===== AJUSTES (cámbialos aquí) =====
-	static final float RADIO = 5f;          // media anchura de la runa en bloques (3.6 de ancho)
-	static final float ALTURA = 2.4f;         // altura del centro sobre los pies
-	static final float DETRAS = 1.0f;         // distancia detrás de la espalda
+	// ===== AJUSTES FIJOS (tamaño, altura, distancia, brillo y color están en config/runaarco.json) =====
 	static final float TICKS_APARICION = 12f; // ticks que tarda en aparecer del todo
-	static final int FRAMES = 12;             // cuadros de tu animación
-	static final float TICKS_POR_FRAME = 2f;  // igual que tu frametime: 2
+	// (la animación de la runa viene del archivo .runa elegido)
 	// =====================================
 
 	private static final int FULL_BRIGHT = 0xF000F0; // luz máxima (15,15)
 
-	private static final Identifier[] FRAME = new Identifier[FRAMES];
 	private static final Identifier TEX_GLOW = id("textures/rune/glow.png");
-
-	static {
-		for (int i = 0; i < FRAMES; i++) {
-			FRAME[i] = id(String.format("textures/rune/frame_%02d.png", i));
-		}
-	}
 
 	private static Identifier id(String path) {
 		return Identifier.fromNamespaceAndPath(MOD_ID, path);
@@ -55,8 +44,12 @@ public class RunaArcoClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		RunaConfig.cargar();
+		RunaLibrary.iniciar();
 		// 1) Recoger qué jugadores están tensando el arco
 		LevelRenderEvents.END_EXTRACTION.register(ctx -> {
+			RunaConfig.revisar();
+			RunaLibrary.sincronizar(RunaConfig.runa);
 			RUNES.clear();
 			cameraPos = ctx.camera().position();
 			float pt = ctx.deltaTracker().getGameTimeDeltaPartialTick(false);
@@ -75,9 +68,9 @@ public class RunaArcoClient implements ClientModInitializer {
 				double rad = Math.toRadians(yaw);
 				double dx = -Math.sin(rad), dz = Math.cos(rad);
 				Vec3 center = new Vec3(
-						pos.x - dx * DETRAS,
-						pos.y + ALTURA,
-						pos.z - dz * DETRAS);
+						pos.x - dx * RunaConfig.distancia,
+						pos.y + RunaConfig.altura,
+						pos.z - dz * RunaConfig.distancia);
 				RUNES.add(new Rune(center, yaw, charge, p.tickCount + pt));
 			}
 		});
@@ -87,6 +80,7 @@ public class RunaArcoClient implements ClientModInitializer {
 			if (RUNES.isEmpty()) return;
 			PoseStack ps = ctx.poseStack();
 			SubmitNodeCollector out = ctx.submitNodeCollector();
+			RunaLibrary.Runa ru = RunaLibrary.obtener();
 
 			for (Rune r : RUNES) {
 				float t = r.time();
@@ -94,9 +88,9 @@ public class RunaArcoClient implements ClientModInitializer {
 
 				float bob = 0.08f * Mth.sin(t * 0.12f);                       // flota suavemente
 				float pulse = 1f + 0.03f * Mth.sin(t * 0.3f);                  // late
-				float size = Mth.lerp(c, 0.3f, 1f) * pulse * RADIO;
+				float size = Mth.lerp(c, 0.3f, 1f) * pulse * RunaConfig.tamano;
 				float flicker = 0.88f + 0.12f * Mth.sin(t * 0.8f) * Mth.sin(t * 0.31f);
-				int alpha = (int) (255 * c * flicker);
+				int alpha = (int) Math.min(255f, 255 * c * flicker * RunaConfig.brillo);
 
 				ps.pushPose();
 				ps.translate(r.center().x - cameraPos.x,
@@ -112,24 +106,32 @@ public class RunaArcoClient implements ClientModInitializer {
 				float phase = (t % 30f) / 30f;
 				int echoAlpha = (int) (alpha * 0.45f * (1f - phase));
 				if (echoAlpha > 2) {
-					animated(out, ps, t, size * (1f + 0.35f * phase), -0.002f, echoAlpha);
+					animated(out, ps, ru, t, size * (1f + 0.35f * phase), -0.002f, echoAlpha);
 				}
 
 				// tu runa, con tu animación de 12 cuadros
-				animated(out, ps, t, size, 0f, alpha);
+				animated(out, ps, ru, t, size, 0f, alpha);
 				ps.popPose();
 			}
 		});
 	}
 
-	/** Mezcla el cuadro actual con el siguiente (igual que "interpolate": true en tu .mcmeta). */
-	private static void animated(SubmitNodeCollector out, PoseStack ps, float t, float half, float z, int alpha) {
-		float f = (t / TICKS_POR_FRAME) % FRAMES;
+	/** Dibuja el cuadro actual y, si el .runa lo pide, lo mezcla con el siguiente. */
+	private static void animated(SubmitNodeCollector out, PoseStack ps, RunaLibrary.Runa ru,
+								 float t, float half, float z, int alpha) {
+		Identifier[] fr = ru.frames();
+		int n = fr.length;
+		float f = (t / ru.ticksPorFrame()) % n;
 		int i = (int) f;
 		float frac = f - i;
-		int next = (i + 1) % FRAMES;
-		quad(out, ps, FRAME[i], half, half, z, (int) (alpha * (1f - frac * 0.5f)));
-		quad(out, ps, FRAME[next], half, half, z + 0.0005f, (int) (alpha * frac * 0.5f));
+		float halfH = half * ru.aspecto();
+		if (ru.interpolar() && n > 1) {
+			int next = (i + 1) % n;
+			quad(out, ps, fr[i], half, halfH, z, (int) (alpha * (1f - frac * 0.5f)));
+			quad(out, ps, fr[next], half, halfH, z + 0.0005f, (int) (alpha * frac * 0.5f));
+		} else {
+			quad(out, ps, fr[i], half, halfH, z, alpha);
+		}
 	}
 
 	/** Un cuadrado con textura, visible por ambos lados. */
@@ -145,7 +147,11 @@ public class RunaArcoClient implements ClientModInitializer {
 						: new float[][]{{1, -1, 0, 1}, {-1, -1, 1, 1}, {-1, 1, 1, 0}, {1, 1, 0, 0}};
 				for (float[] p : v) {
 					vc.addVertex(pose, p[0] * halfW, p[1] * halfH, z)
-							.setColor(255, 255, 255, alpha)
+							.setColor(
+									Math.min(255, (int) (RunaConfig.rojo * Math.min(RunaConfig.brillo, 1f))),
+									Math.min(255, (int) (RunaConfig.verde * Math.min(RunaConfig.brillo, 1f))),
+									Math.min(255, (int) (RunaConfig.azul * Math.min(RunaConfig.brillo, 1f))),
+									alpha)
 							.setUv(p[2], p[3])
 							.setOverlay(OverlayTexture.NO_OVERLAY)
 							.setLight(FULL_BRIGHT)
@@ -155,4 +161,3 @@ public class RunaArcoClient implements ClientModInitializer {
 		});
 	}
 }
-

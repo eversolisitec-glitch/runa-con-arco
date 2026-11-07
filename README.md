@@ -14,3 +14,24 @@ Si falla, copia el texto rojo del error del paso "gradle build" y pégalo en el 
 
 ## Ajustes
 En `src/main/java/com/runaarco/RunaArcoClient.java`, arriba: tamaño, altura, distancia y velocidad de aparición.
+
+## Configuración
+Al abrir el juego se crea `config/runaarco.json` en la carpeta de la instancia.
+Edítalo con el Bloc de notas y guarda: se aplica en ~2 segundos con el juego abierto.
+- `tamano`: media anchura en bloques
+- `altura`: altura sobre los pies
+- `distancia`: distancia detrás de la espalda
+- `brillo`: 1.0 normal, 0.5 tenue, 1.5 intenso
+- `color`: tinte en hexadecimal (`#FFFFFF` = colores originales)
+
+## Menú en el juego
+Necesita Mod Menu y Cloth Config en la carpeta `mods` (el mod funciona sin ellos, solo que sin menú).
+Menú principal o de pausa → **Mods** → Runa del Arco → engranaje.
+
+## Archivos .runa
+Un `.runa` es un ZIP con `runa.png` (tira vertical de cuadros) y `runa.json` (opcional):
+```json
+{ "nombre": "Mi runa", "cuadros": 12, "ticksPorFrame": 2, "interpolar": true }
+```
+Ponlos en la carpeta `runas` de tu instancia (se crea sola, con 3 ejemplos) y elige uno en el menú
+o en `config/runaarco.json` (campo `runa`).

@@ -11,6 +11,9 @@ dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// Solo para compilar el menú (Mod Menu + Cloth Config); en el juego los pones en la carpeta mods
+	compileOnly files('libs/cloth-config-26.1.154.jar', 'libs/modmenu-18.0.2.jar', 'libs/basic-math-0.6.1.jar')
 }
 
 processResources {
