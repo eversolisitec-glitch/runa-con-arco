@@ -39,3 +39,8 @@ o en `config/runaarco.json` (campo `runa`).
 ## Lista de runas con una tecla
 Dentro del juego pulsa **R** (se cambia en Opciones → Controles → Runa del Arco).
 Se abre la lista de archivos de la carpeta `runas`; un clic en una runa la activa al instante.
+
+## Mobs con arco
+Esqueletos, strays, bogged y cualquier mob que tense un arco muestran su propia runa
+(se elige en la pestaña **Mobs** de la lista con la tecla R, o en el menú → Mobs con arco).
+Los mobs tienen tamaño, altura y distancia propios y se pueden desactivar.

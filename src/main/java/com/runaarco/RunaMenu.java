@@ -16,7 +16,7 @@ public class RunaMenu {
 				.setTitle(Component.literal("Runa del Arco"))
 				.setSavingRunnable(RunaConfig::guardar);
 
-		ConfigCategory cat = b.getOrCreateCategory(Component.literal("Runa"));
+		ConfigCategory cat = b.getOrCreateCategory(Component.literal("Jugadores"));
 		ConfigEntryBuilder e = b.entryBuilder();
 
 		// --- Qué runa usar (archivos .runa de la carpeta "runas") ---
@@ -24,7 +24,7 @@ public class RunaMenu {
 		String[] valores = lista.toArray(new String[0]);
 		String actual = RunaConfig.runa.isEmpty() || !lista.contains(RunaConfig.runa)
 				? RunaLibrary.PREDETERMINADA : RunaConfig.runa;
-		cat.addEntry(e.startSelector(Component.literal("Runa (archivo .runa)"), valores, actual)
+		cat.addEntry(e.startSelector(Component.literal("Runa de jugadores (archivo .runa)"), valores, actual)
 				.setDefaultValue(RunaLibrary.PREDETERMINADA)
 				.setNameProvider(s -> Component.literal(s))
 				.setTooltip(Component.literal("Archivos .runa de la carpeta \"runas\" de tu instancia."))
@@ -51,16 +51,52 @@ public class RunaMenu {
 				.build());
 
 		// --- Brillo y color ---
-		cat.addEntry(e.startIntSlider(Component.literal("Brillo"), Math.round(RunaConfig.brillo * 100), 0, 300)
+		cat.addEntry(e.startIntSlider(Component.literal("Brillo (jugadores y mobs)"), Math.round(RunaConfig.brillo * 100), 0, 300)
 				.setDefaultValue(100)
 				.setTextGetter(v -> Component.literal(v + " %"))
 				.setSaveConsumer(v -> RunaConfig.brillo = v / 100f)
 				.build());
 
-		cat.addEntry(e.startColorField(Component.literal("Color (tinte)"), RunaConfig.colorRgb())
+		cat.addEntry(e.startColorField(Component.literal("Color (jugadores y mobs)"), RunaConfig.colorRgb())
 				.setDefaultValue(0xFFFFFF)
 				.setTooltip(Component.literal("#FFFFFF deja los colores originales de la runa."))
 				.setSaveConsumer(c -> RunaConfig.setColorRgb(c))
+				.build());
+
+
+		// ===== MOBS CON ARCO (esqueletos, etc.) =====
+		ConfigCategory mobs = b.getOrCreateCategory(Component.literal("Mobs con arco"));
+
+		mobs.addEntry(e.startBooleanToggle(Component.literal("Mostrar runa en mobs"), RunaConfig.mobsActivos)
+				.setDefaultValue(true)
+				.setTooltip(Component.literal("Esqueletos, strays, bogged y cualquier mob que tense un arco."))
+				.setSaveConsumer(v -> RunaConfig.mobsActivos = v)
+				.build());
+
+		String actualMobs = RunaConfig.runaMobs.isEmpty() || !lista.contains(RunaConfig.runaMobs)
+				? RunaLibrary.PREDETERMINADA : RunaConfig.runaMobs;
+		mobs.addEntry(e.startSelector(Component.literal("Runa de mobs (archivo .runa)"), valores, actualMobs)
+				.setDefaultValue(RunaLibrary.PREDETERMINADA)
+				.setNameProvider(s -> Component.literal(s))
+				.setSaveConsumer(s -> RunaConfig.runaMobs = s.equals(RunaLibrary.PREDETERMINADA) ? "" : s)
+				.build());
+
+		mobs.addEntry(e.startIntSlider(Component.literal("Tamaño"), Math.round(RunaConfig.tamanoMobs * 10), 5, 100)
+				.setDefaultValue(14)
+				.setTextGetter(v -> Component.literal(String.format("%.1f bloques de radio", v / 10f)))
+				.setSaveConsumer(v -> RunaConfig.tamanoMobs = v / 10f)
+				.build());
+
+		mobs.addEntry(e.startIntSlider(Component.literal("Altura"), Math.round(RunaConfig.alturaMobs * 10), -10, 100)
+				.setDefaultValue(23)
+				.setTextGetter(v -> Component.literal(String.format("%.1f bloques sobre los pies", v / 10f)))
+				.setSaveConsumer(v -> RunaConfig.alturaMobs = v / 10f)
+				.build());
+
+		mobs.addEntry(e.startIntSlider(Component.literal("Distancia a la espalda"), Math.round(RunaConfig.distanciaMobs * 10), -20, 80)
+				.setDefaultValue(9)
+				.setTextGetter(v -> Component.literal(String.format("%.1f bloques", v / 10f)))
+				.setSaveConsumer(v -> RunaConfig.distanciaMobs = v / 10f)
 				.build());
 
 		return b.build();

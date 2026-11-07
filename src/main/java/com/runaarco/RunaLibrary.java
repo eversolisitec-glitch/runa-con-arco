@@ -44,10 +44,19 @@ public class RunaLibrary {
 
 	private static final Path DIR = FabricLoader.getInstance().getGameDir().resolve("runas");
 
+	/** Una runa cargada: una para jugadores y otra para mobs. */
+	private static final class Slot {
+		final String prefijo;
+		Runa actual;
+		String cargada = null;
+		long mtime = -1;
+		Slot(String prefijo) { this.prefijo = prefijo; }
+	}
+
+	private static final Slot JUGADORES = new Slot("f");
+	private static final Slot MOBS = new Slot("m");
+
 	private static Runa porDefecto;
-	private static Runa actual;
-	private static String cargada = null;
-	private static long mtimeCargada = -1;
 	private static int contador = 0;
 
 	/** Crea la carpeta y copia las runas de ejemplo la primera vez. */
@@ -80,38 +89,44 @@ public class RunaLibrary {
 		return out;
 	}
 
-	public static Runa obtener() {
-		return actual != null ? actual : predeterminada();
+	public static Runa obtener(boolean mob) {
+		Slot s = mob ? MOBS : JUGADORES;
+		return s.actual != null ? s.actual : predeterminada();
 	}
 
 	/** Se llama cada fotograma: recarga si cambió el nombre elegido o el archivo. */
-	public static void sincronizar(String nombre) {
-		String n = nombre == null ? "" : nombre;
-		boolean revisarArchivo = false;
+	public static void sincronizar() {
+		boolean revisar = false;
 		if (++contador >= 120) {
 			contador = 0;
-			revisarArchivo = !n.isEmpty();
+			revisar = true;
 		}
-		boolean cambioNombre = !Objects.equals(n, cargada);
-		if (!cambioNombre && !revisarArchivo) return;
+		sincronizar(JUGADORES, RunaConfig.runa, revisar);
+		sincronizar(MOBS, RunaConfig.runaMobs, revisar);
+	}
+
+	private static void sincronizar(Slot s, String nombre, boolean revisarArchivo) {
+		String n = nombre == null ? "" : nombre;
+		boolean cambioNombre = !Objects.equals(n, s.cargada);
+		if (!cambioNombre && !(revisarArchivo && !n.isEmpty())) return;
 
 		if (n.isEmpty() || n.equals(PREDETERMINADA)) {
-			actual = predeterminada();
-			cargada = n;
+			s.actual = predeterminada();
+			s.cargada = n;
 			return;
 		}
 		Path f = DIR.resolve(n);
 		try {
 			long m = Files.getLastModifiedTime(f).toMillis();
-			if (!cambioNombre && m == mtimeCargada) return;
-			actual = cargarArchivo(f);
-			mtimeCargada = m;
+			if (!cambioNombre && m == s.mtime) return;
+			s.actual = cargarArchivo(f, s.prefijo);
+			s.mtime = m;
 		} catch (Exception e) {
 			System.err.println("[runaarco] No se pudo cargar " + n + ": " + e.getMessage());
-			actual = predeterminada();
-			mtimeCargada = -1;
+			s.actual = predeterminada();
+			s.mtime = -1;
 		}
-		cargada = n;
+		s.cargada = n;
 	}
 
 	private static Runa predeterminada() {
@@ -126,7 +141,7 @@ public class RunaLibrary {
 		return porDefecto;
 	}
 
-	private static Runa cargarArchivo(Path file) throws Exception {
+	private static Runa cargarArchivo(Path file, String prefijo) throws Exception {
 		try (ZipFile z = new ZipFile(file.toFile())) {
 			ZipEntry pe = z.getEntry("runa.png");
 			if (pe == null) throw new IllegalStateException("el archivo no tiene runa.png");
@@ -157,9 +172,9 @@ public class RunaLibrary {
 				ByteArrayOutputStream bos = new ByteArrayOutputStream();
 				ImageIO.write(sub, "png", bos);
 				NativeImage ni = NativeImage.read(new ByteArrayInputStream(bos.toByteArray()));
-				// ids fijos: al recargar se reemplazan las texturas anteriores
-				Identifier id = Identifier.fromNamespaceAndPath(RunaArcoClient.MOD_ID, String.format("dyn/f_%03d", i));
-				tm.register(id, crearTextura(ni, "runaarco/f" + i));
+				// ids fijos por espacio (f = jugadores, m = mobs): al recargar se reemplazan las anteriores
+				Identifier id = Identifier.fromNamespaceAndPath(RunaArcoClient.MOD_ID, String.format("dyn/%s_%03d", prefijo, i));
+				tm.register(id, crearTextura(ni, "runaarco/" + prefijo + i));
 				ids[i] = id;
 			}
 			return new Runa(ids, Math.max(0.1f, ticks), interpolar, (float) fh / (float) w);

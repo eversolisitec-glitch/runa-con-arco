@@ -8,12 +8,14 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
@@ -22,16 +24,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Dibuja tu runa animada (12 cuadros) a la espalda de todo jugador que tense un arco.
- * Se ve en ti y en los demás jugadores (solo si tú tienes el mod instalado).
+ * Dibuja una runa animada (archivo .runa) a la espalda de todo jugador o mob que tense un arco.
+ * Se ve en ti, en otros jugadores y en esqueletos, etc. (solo si tú tienes el mod instalado).
  */
 public class RunaArcoClient implements ClientModInitializer {
 	public static final String MOD_ID = "runaarco";
 
-	// ===== AJUSTES FIJOS (tamaño, altura, distancia, brillo y color están en config/runaarco.json) =====
 	static final float TICKS_APARICION = 12f; // ticks que tarda en aparecer del todo
-	// (la animación de la runa viene del archivo .runa elegido)
-	// =====================================
+	static final double DISTANCIA_MAX_MOBS = 48.0; // no se dibuja en mobs más lejos que esto
+	static final int MAX_RUNAS = 48;
 
 	private static final int FULL_BRIGHT = 0xF000F0; // luz máxima (15,15)
 
@@ -41,7 +42,7 @@ public class RunaArcoClient implements ClientModInitializer {
 		return Identifier.fromNamespaceAndPath(MOD_ID, path);
 	}
 
-	private record Rune(Vec3 center, float yaw, float charge, float time) {}
+	private record Rune(Vec3 center, float yaw, float charge, float time, boolean mob) {}
 
 	private static final List<Rune> RUNES = new ArrayList<>();
 	private static Vec3 cameraPos = Vec3.ZERO;
@@ -62,32 +63,38 @@ public class RunaArcoClient implements ClientModInitializer {
 			}
 		});
 
-		// 1) Recoger qué jugadores están tensando el arco
+		// 1) Recoger quién está tensando un arco (jugadores y mobs)
 		LevelRenderEvents.END_EXTRACTION.register(ctx -> {
 			RunaConfig.revisar();
-			RunaLibrary.sincronizar(RunaConfig.runa);
+			RunaLibrary.sincronizar();
 			RUNES.clear();
 			cameraPos = ctx.camera().position();
 			float pt = ctx.deltaTracker().getGameTimeDeltaPartialTick(false);
 
-			for (AbstractClientPlayer p : ctx.level().players()) {
-				if (!p.isUsingItem()) continue;
-				ItemStack stack = p.getUseItem();
+			for (Entity e : ctx.level().entitiesForRendering()) {
+				if (!(e instanceof LivingEntity le)) continue;
+				if (!le.isUsingItem()) continue;
+				ItemStack stack = le.getUseItem();
 				if (!stack.is(Items.BOW)) continue;
 
-				int used = stack.getUseDuration(p) - p.getUseItemRemainingTicks();
-				float charge = Mth.clamp((used + pt) / TICKS_APARICION, 0f, 1f);
+				boolean mob = !(le instanceof Player);
+				if (mob) {
+					if (!RunaConfig.mobsActivos) continue;
+					if (le.position().distanceToSqr(cameraPos) > DISTANCIA_MAX_MOBS * DISTANCIA_MAX_MOBS) continue;
+				}
+				if (RUNES.size() >= MAX_RUNAS) break;
+
+				float charge = Mth.clamp((le.getTicksUsingItem() + pt) / TICKS_APARICION, 0f, 1f);
 				charge = charge * charge * (3f - 2f * charge); // aparición suave
 
-				float yaw = p.getViewYRot(pt); // hacia donde miras (0 = +Z)
-				Vec3 pos = p.getPosition(pt);
+				float yaw = le.getViewYRot(pt); // hacia donde mira (0 = +Z)
+				Vec3 pos = le.getPosition(pt);
 				double rad = Math.toRadians(yaw);
 				double dx = -Math.sin(rad), dz = Math.cos(rad);
-				Vec3 center = new Vec3(
-						pos.x - dx * RunaConfig.distancia,
-						pos.y + RunaConfig.altura,
-						pos.z - dz * RunaConfig.distancia);
-				RUNES.add(new Rune(center, yaw, charge, p.tickCount + pt));
+				float dist = mob ? RunaConfig.distanciaMobs : RunaConfig.distancia;
+				float alt = mob ? RunaConfig.alturaMobs : RunaConfig.altura;
+				Vec3 center = new Vec3(pos.x - dx * dist, pos.y + alt, pos.z - dz * dist);
+				RUNES.add(new Rune(center, yaw, charge, le.tickCount + pt, mob));
 			}
 		});
 
@@ -96,15 +103,16 @@ public class RunaArcoClient implements ClientModInitializer {
 			if (RUNES.isEmpty()) return;
 			PoseStack ps = ctx.poseStack();
 			SubmitNodeCollector out = ctx.submitNodeCollector();
-			RunaLibrary.Runa ru = RunaLibrary.obtener();
 
 			for (Rune r : RUNES) {
+				RunaLibrary.Runa ru = RunaLibrary.obtener(r.mob());
 				float t = r.time();
 				float c = r.charge();
+				float base = r.mob() ? RunaConfig.tamanoMobs : RunaConfig.tamano;
 
 				float bob = 0.08f * Mth.sin(t * 0.12f);                       // flota suavemente
 				float pulse = 1f + 0.03f * Mth.sin(t * 0.3f);                  // late
-				float size = Mth.lerp(c, 0.3f, 1f) * pulse * RunaConfig.tamano;
+				float size = Mth.lerp(c, 0.3f, 1f) * pulse * base;
 				float flicker = 0.88f + 0.12f * Mth.sin(t * 0.8f) * Mth.sin(t * 0.31f);
 				int alpha = (int) Math.min(255f, 255 * c * flicker * RunaConfig.brillo);
 
@@ -125,7 +133,7 @@ public class RunaArcoClient implements ClientModInitializer {
 					animated(out, ps, ru, t, size * (1f + 0.35f * phase), -0.002f, echoAlpha);
 				}
 
-				// tu runa, con tu animación de 12 cuadros
+				// la runa, con su animación
 				animated(out, ps, ru, t, size, 0f, alpha);
 				ps.popPose();
 			}
@@ -161,12 +169,13 @@ public class RunaArcoClient implements ClientModInitializer {
 				float[][] v = side == 0
 						? new float[][]{{-1, -1, 0, 1}, {1, -1, 1, 1}, {1, 1, 1, 0}, {-1, 1, 0, 0}}
 						: new float[][]{{1, -1, 0, 1}, {-1, -1, 1, 1}, {-1, 1, 1, 0}, {1, 1, 0, 0}};
+				float b = Math.min(RunaConfig.brillo, 1f);
 				for (float[] p : v) {
 					vc.addVertex(pose, p[0] * halfW, p[1] * halfH, z)
 							.setColor(
-									Math.min(255, (int) (RunaConfig.rojo * Math.min(RunaConfig.brillo, 1f))),
-									Math.min(255, (int) (RunaConfig.verde * Math.min(RunaConfig.brillo, 1f))),
-									Math.min(255, (int) (RunaConfig.azul * Math.min(RunaConfig.brillo, 1f))),
+									Math.min(255, (int) (RunaConfig.rojo * b)),
+									Math.min(255, (int) (RunaConfig.verde * b)),
+									Math.min(255, (int) (RunaConfig.azul * b)),
 									alpha)
 							.setUv(p[2], p[3])
 							.setOverlay(OverlayTexture.NO_OVERLAY)
