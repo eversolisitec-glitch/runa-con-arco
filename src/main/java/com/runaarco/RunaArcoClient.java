@@ -25,7 +25,7 @@ public class RunaArcoClient implements ClientModInitializer {
 	public static final String MOD_ID = "runaarco";
 
 	// ===== AJUSTES (cámbialos aquí) =====
-	static final float RADIO = 1.8f;          // media anchura de la runa en bloques (3.6 de ancho)
+	static final float RADIO = 5f;          // media anchura de la runa en bloques (3.6 de ancho)
 	static final float ALTURA = 2.4f;         // altura del centro sobre los pies
 	static final float DETRAS = 1.0f;         // distancia detrás de la espalda
 	static final float TICKS_APARICION = 12f; // ticks que tarda en aparecer del todo
