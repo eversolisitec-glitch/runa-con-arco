@@ -5,7 +5,6 @@ import com.mojang.math.Axis;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -33,6 +32,8 @@ public class RunaArcoClient implements ClientModInitializer {
 	static final int FRAMES = 12;             // cuadros de tu animación
 	static final float TICKS_POR_FRAME = 2f;  // igual que tu frametime: 2
 	// =====================================
+
+	private static final int FULL_BRIGHT = 0xF000F0; // luz máxima (15,15)
 
 	private static final Identifier[] FRAME = new Identifier[FRAMES];
 	private static final Identifier TEX_GLOW = id("textures/rune/glow.png");
@@ -147,10 +148,11 @@ public class RunaArcoClient implements ClientModInitializer {
 							.setColor(255, 255, 255, alpha)
 							.setUv(p[2], p[3])
 							.setOverlay(OverlayTexture.NO_OVERLAY)
-							.setLight(LightTexture.FULL_BRIGHT)
+							.setLight(FULL_BRIGHT)
 							.setNormal(pose, 0f, 0f, n);
 				}
 			}
 		});
 	}
 }
+
