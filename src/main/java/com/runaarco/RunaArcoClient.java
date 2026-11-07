@@ -1,9 +1,13 @@
 package com.runaarco;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
@@ -41,11 +45,23 @@ public class RunaArcoClient implements ClientModInitializer {
 
 	private static final List<Rune> RUNES = new ArrayList<>();
 	private static Vec3 cameraPos = Vec3.ZERO;
+	private static KeyMapping abrirLista;
 
 	@Override
 	public void onInitializeClient() {
 		RunaConfig.cargar();
 		RunaLibrary.iniciar();
+
+		// Tecla para abrir la lista de runas (por defecto R; se cambia en Controles)
+		KeyMapping.Category categoria = KeyMapping.Category.register(id("principal"));
+		abrirLista = KeyMappingHelper.registerKeyMapping(
+				new KeyMapping("key.runaarco.abrir", InputConstants.Type.KEYSYM, 82, categoria));
+		ClientTickEvents.END_CLIENT_TICK.register(mc -> {
+			while (abrirLista.consumeClick()) {
+				if (mc.screen == null) mc.setScreen(new RunaListaScreen());
+			}
+		});
+
 		// 1) Recoger qué jugadores están tensando el arco
 		LevelRenderEvents.END_EXTRACTION.register(ctx -> {
 			RunaConfig.revisar();

@@ -35,3 +35,7 @@ Un `.runa` es un ZIP con `runa.png` (tira vertical de cuadros) y `runa.json` (op
 ```
 Ponlos en la carpeta `runas` de tu instancia (se crea sola, con 3 ejemplos) y elige uno en el menú
 o en `config/runaarco.json` (campo `runa`).
+
+## Lista de runas con una tecla
+Dentro del juego pulsa **R** (se cambia en Opciones → Controles → Runa del Arco).
+Se abre la lista de archivos de la carpeta `runas`; un clic en una runa la activa al instante.
