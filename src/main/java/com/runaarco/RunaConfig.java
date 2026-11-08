@@ -27,7 +27,8 @@ public class RunaConfig {
 		public String runaMobs = "";
 		// --- Común ---
 		public float brillo = 1.0f;      // 1.0 normal; 0.5 tenue; 1.5 más intenso
-		public String color = "#FFFFFF"; // tinte: #FFFFFF = colores originales de la runa
+		public boolean colorPersonalizado = false; // false = colores propios de cada runa
+		public String color = "#FFFFFF"; // color que se usa cuando colorPersonalizado = true
 	}
 
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -37,6 +38,7 @@ public class RunaConfig {
 	public static float tamano = 1.8f, altura = 2.4f, distancia = 1.0f, brillo = 1.0f;
 	public static float tamanoMobs = 1.4f, alturaMobs = 2.3f, distanciaMobs = 0.9f;
 	public static boolean mobsActivos = true;
+	public static boolean colorPersonalizado = false;
 	public static int rojo = 255, verde = 255, azul = 255;
 	public static String runa = "";
 	public static String runaMobs = "";
@@ -72,6 +74,7 @@ public class RunaConfig {
 			distanciaMobs = clamp(d.distanciaMobs, -10f, 20f);
 			runaMobs = d.runaMobs == null ? "" : d.runaMobs.trim();
 			brillo = clamp(d.brillo, 0f, 3f);
+			colorPersonalizado = d.colorPersonalizado;
 			setColorRgb(parseColor(d.color));
 		} catch (Exception e) {
 			// Si el archivo tiene un error, se conservan los valores anteriores
@@ -92,6 +95,7 @@ public class RunaConfig {
 			d.distanciaMobs = distanciaMobs;
 			d.runaMobs = runaMobs;
 			d.brillo = brillo;
+			d.colorPersonalizado = colorPersonalizado;
 			d.color = String.format("#%02X%02X%02X", rojo, verde, azul);
 			Files.writeString(FILE, GSON.toJson(d));
 			ultimaModificacion = Files.getLastModifiedTime(FILE).toMillis();

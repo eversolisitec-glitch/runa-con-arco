@@ -33,7 +33,7 @@ Un `.runa` es un ZIP con `runa.png` (tira vertical de cuadros) y `runa.json` (op
 ```json
 { "nombre": "Mi runa", "cuadros": 12, "ticksPorFrame": 2, "interpolar": true }
 ```
-Ponlos en la carpeta `runas` de tu instancia (se crea sola, con 3 ejemplos) y elige uno en el menú
+Ponlos en la carpeta `runas` de tu instancia (se crea sola, con 6 ejemplos) y elige uno en el menú
 o en `config/runaarco.json` (campo `runa`).
 
 ## Lista de runas con una tecla
@@ -44,3 +44,7 @@ Se abre la lista de archivos de la carpeta `runas`; un clic en una runa la activ
 Esqueletos, strays, bogged y cualquier mob que tense un arco muestran su propia runa
 (se elige en la pestaña **Mobs** de la lista con la tecla R, o en el menú → Mobs con arco).
 Los mobs tienen tamaño, altura y distancia propios y se pueden desactivar.
+
+## Capas que giran y color propio
+El `runa.json` de un .runa puede traer `"tinte"`, `"halo"` y una lista de `"capas"` (imágenes que giran detrás,
+con `"giro"` en grados por tick). En el menú, **Usar un color propio** cambia el color de cualquier runa.

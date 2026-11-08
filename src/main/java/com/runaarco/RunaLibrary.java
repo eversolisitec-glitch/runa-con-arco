@@ -1,5 +1,7 @@
 package com.runaarco;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.platform.NativeImage;
@@ -32,15 +34,25 @@ import java.util.zip.ZipFile;
  *
  * Un .runa es un ZIP con:
  *   runa.png  -> tira vertical con los cuadros de la animación (uno debajo de otro, todos del mismo tamaño)
- *   runa.json -> opcional: { "nombre": "...", "cuadros": 12, "ticksPorFrame": 2, "interpolar": true }
+ *   runa.json -> opcional:
+ *     { "nombre": "...", "cuadros": 12, "ticksPorFrame": 2, "interpolar": true,
+ *       "tinte": "#FFA45B",   // color con el que se ve si NO eliges un color propio (la imagen suele ir en gris)
+ *       "halo": "#FF7828",    // color del resplandor de atrás (si falta se calcula solo)
+ *       "capas": [ { "archivo": "fondo.png", "giro": 0.5 } ] }  // imágenes que giran detrás (grados por tick)
  */
 public class RunaLibrary {
 	public static final String PREDETERMINADA = "(predeterminada)";
-	private static final String[] EJEMPLOS = {"runa_arco.runa", "circulo_cian.runa", "circulo_violeta.runa"};
+	private static final String[] EJEMPLOS = {
+			"runa_arco.runa", "circulo_cian.runa", "circulo_violeta.runa", "alas_cruz.runa", "fenix.runa", "transmutacion.runa"};
 	private static final int MAX_FRAMES = 128;
+	private static final int MAX_CAPAS = 8;
 
-	/** Lo que necesita el dibujo. aspecto = alto / ancho de cada cuadro. */
-	public record Runa(Identifier[] frames, float ticksPorFrame, boolean interpolar, float aspecto) {}
+	/** Una imagen que gira detrás de la runa. giro = grados por tick. */
+	public record Capa(Identifier id, float giro) {}
+
+	/** Lo que necesita el dibujo. aspecto = alto / ancho de cada cuadro. Los colores son RGB. */
+	public record Runa(Identifier[] frames, float ticksPorFrame, boolean interpolar, float aspecto,
+					   int tinte, int halo, Capa[] capas) {}
 
 	private static final Path DIR = FabricLoader.getInstance().getGameDir().resolve("runas");
 
@@ -136,7 +148,7 @@ public class RunaLibrary {
 				f[i] = Identifier.fromNamespaceAndPath(RunaArcoClient.MOD_ID,
 						String.format("textures/rune/frame_%02d.png", i));
 			}
-			porDefecto = new Runa(f, 2f, true, 1f);
+			porDefecto = new Runa(f, 2f, true, 1f, 0xFFFFFF, 0x46E1E1, new Capa[0]);
 		}
 		return porDefecto;
 	}
@@ -165,6 +177,10 @@ public class RunaLibrary {
 			float ticks = j.has("ticksPorFrame") ? j.get("ticksPorFrame").getAsFloat() : 2f;
 			boolean interpolar = !j.has("interpolar") || j.get("interpolar").getAsBoolean();
 
+			int tinte = j.has("tinte") ? hex(j.get("tinte").getAsString(), 0xFFFFFF) : 0xFFFFFF;
+			int halo = j.has("halo") ? hex(j.get("halo").getAsString(), tinte)
+					: (j.has("tinte") ? tinte : promedio(img));
+
 			Identifier[] ids = new Identifier[n];
 			var tm = Minecraft.getInstance().getTextureManager();
 			for (int i = 0; i < n; i++) {
@@ -177,8 +193,60 @@ public class RunaLibrary {
 				tm.register(id, crearTextura(ni, "runaarco/" + prefijo + i));
 				ids[i] = id;
 			}
-			return new Runa(ids, Math.max(0.1f, ticks), interpolar, (float) fh / (float) w);
+
+			// Capas que giran detrás (opcional)
+			List<Capa> capas = new ArrayList<>();
+			if (j.has("capas") && j.get("capas").isJsonArray()) {
+				JsonArray arr = j.getAsJsonArray("capas");
+				for (int c = 0; c < arr.size() && c < MAX_CAPAS; c++) {
+					JsonElement el = arr.get(c);
+					if (!el.isJsonObject()) continue;
+					JsonObject o = el.getAsJsonObject();
+					if (!o.has("archivo")) continue;
+					ZipEntry ce = z.getEntry(o.get("archivo").getAsString());
+					if (ce == null) continue;
+					byte[] datos;
+					try (InputStream in = z.getInputStream(ce)) {
+						datos = in.readAllBytes();
+					}
+					NativeImage ni = NativeImage.read(new ByteArrayInputStream(datos));
+					Identifier id = Identifier.fromNamespaceAndPath(RunaArcoClient.MOD_ID, String.format("dyn/%s_c%02d", prefijo, c));
+					tm.register(id, crearTextura(ni, "runaarco/" + prefijo + "c" + c));
+					float giro = o.has("giro") ? o.get("giro").getAsFloat() : 0f;
+					capas.add(new Capa(id, giro));
+				}
+			}
+			return new Runa(ids, Math.max(0.1f, ticks), interpolar, (float) fh / (float) w,
+					tinte, halo, capas.toArray(new Capa[0]));
 		}
+	}
+
+	private static int hex(String s, int defecto) {
+		try {
+			String h = s.trim();
+			if (h.startsWith("#")) h = h.substring(1);
+			return Integer.parseInt(h, 16) & 0xFFFFFF;
+		} catch (Exception e) {
+			return defecto;
+		}
+	}
+
+	/** Color medio de los píxeles visibles (para el halo cuando el .runa no lo indica). */
+	private static int promedio(BufferedImage img) {
+		long r = 0, g = 0, b = 0, peso = 0;
+		for (int y = 0; y < img.getHeight(); y += 4) {
+			for (int x = 0; x < img.getWidth(); x += 4) {
+				int p = img.getRGB(x, y);
+				int a = (p >>> 24) & 255;
+				if (a < 60) continue;
+				r += ((p >> 16) & 255) * (long) a;
+				g += ((p >> 8) & 255) * (long) a;
+				b += (p & 255) * (long) a;
+				peso += a;
+			}
+		}
+		if (peso == 0) return 0xFFFFFF;
+		return (int) (r / peso) << 16 | (int) (g / peso) << 8 | (int) (b / peso);
 	}
 
 	/** Crea un DynamicTexture sin depender de la forma exacta de su constructor. */

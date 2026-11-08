@@ -122,19 +122,31 @@ public class RunaArcoClient implements ClientModInitializer {
 						r.center().z - cameraPos.z);
 				ps.mulPose(Axis.YP.rotationDegrees(-r.yaw()));
 
+				int rgbRuna = RunaConfig.colorPersonalizado ? RunaConfig.colorRgb() : ru.tinte();
+				int rgbHalo = RunaConfig.colorPersonalizado ? RunaConfig.colorRgb() : ru.halo();
+
 				// halo que respira detrás
 				float halo = 1.15f + 0.1f * Mth.sin(t * 0.2f);
-				quad(out, ps, TEX_GLOW, size * halo * 1.1f, size * halo * 1.1f, -0.004f, (int) (alpha * 0.75f));
+				quad(out, ps, TEX_GLOW, size * halo * 1.1f, size * halo * 1.1f, -0.004f, (int) (alpha * 0.75f), rgbHalo);
+
+				// capas que giran detrás (círculos mágicos, etc.)
+				RunaLibrary.Capa[] capas = ru.capas();
+				for (int ci = 0; ci < capas.length; ci++) {
+					ps.pushPose();
+					ps.mulPose(Axis.ZP.rotationDegrees(capas[ci].giro() * t));
+					quad(out, ps, capas[ci].id(), size, size * ru.aspecto(), -0.003f - 0.0002f * ci, alpha, rgbRuna);
+					ps.popPose();
+				}
 
 				// eco mágico: copia que se expande y se desvanece cada 30 ticks
 				float phase = (t % 30f) / 30f;
 				int echoAlpha = (int) (alpha * 0.45f * (1f - phase));
 				if (echoAlpha > 2) {
-					animated(out, ps, ru, t, size * (1f + 0.35f * phase), -0.002f, echoAlpha);
+					animated(out, ps, ru, t, size * (1f + 0.35f * phase), -0.002f, echoAlpha, rgbRuna);
 				}
 
 				// la runa, con su animación
-				animated(out, ps, ru, t, size, 0f, alpha);
+				animated(out, ps, ru, t, size, 0f, alpha, rgbRuna);
 				ps.popPose();
 			}
 		});
@@ -142,7 +154,7 @@ public class RunaArcoClient implements ClientModInitializer {
 
 	/** Dibuja el cuadro actual y, si el .runa lo pide, lo mezcla con el siguiente. */
 	private static void animated(SubmitNodeCollector out, PoseStack ps, RunaLibrary.Runa ru,
-								 float t, float half, float z, int alpha) {
+								 float t, float half, float z, int alpha, int rgb) {
 		Identifier[] fr = ru.frames();
 		int n = fr.length;
 		float f = (t / ru.ticksPorFrame()) % n;
@@ -151,16 +163,16 @@ public class RunaArcoClient implements ClientModInitializer {
 		float halfH = half * ru.aspecto();
 		if (ru.interpolar() && n > 1) {
 			int next = (i + 1) % n;
-			quad(out, ps, fr[i], half, halfH, z, (int) (alpha * (1f - frac * 0.5f)));
-			quad(out, ps, fr[next], half, halfH, z + 0.0005f, (int) (alpha * frac * 0.5f));
+			quad(out, ps, fr[i], half, halfH, z, (int) (alpha * (1f - frac * 0.5f)), rgb);
+			quad(out, ps, fr[next], half, halfH, z + 0.0005f, (int) (alpha * frac * 0.5f), rgb);
 		} else {
-			quad(out, ps, fr[i], half, halfH, z, alpha);
+			quad(out, ps, fr[i], half, halfH, z, alpha, rgb);
 		}
 	}
 
 	/** Un cuadrado con textura, visible por ambos lados. */
 	private static void quad(SubmitNodeCollector out, PoseStack ps, Identifier tex,
-							 float halfW, float halfH, float zOff, int alpha) {
+							 float halfW, float halfH, float zOff, int alpha, int rgb) {
 		if (alpha <= 0) return;
 		out.submitCustomGeometry(ps, RenderTypes.eyes(tex), (pose, vc) -> {
 			for (int side = 0; side < 2; side++) {
@@ -170,12 +182,13 @@ public class RunaArcoClient implements ClientModInitializer {
 						? new float[][]{{-1, -1, 0, 1}, {1, -1, 1, 1}, {1, 1, 1, 0}, {-1, 1, 0, 0}}
 						: new float[][]{{1, -1, 0, 1}, {-1, -1, 1, 1}, {-1, 1, 1, 0}, {1, 1, 0, 0}};
 				float b = Math.min(RunaConfig.brillo, 1f);
+				int cr = (rgb >> 16) & 255, cg = (rgb >> 8) & 255, cb = rgb & 255;
 				for (float[] p : v) {
 					vc.addVertex(pose, p[0] * halfW, p[1] * halfH, z)
 							.setColor(
-									Math.min(255, (int) (RunaConfig.rojo * b)),
-									Math.min(255, (int) (RunaConfig.verde * b)),
-									Math.min(255, (int) (RunaConfig.azul * b)),
+									Math.min(255, (int) (cr * b)),
+									Math.min(255, (int) (cg * b)),
+									Math.min(255, (int) (cb * b)),
 									alpha)
 							.setUv(p[2], p[3])
 							.setOverlay(OverlayTexture.NO_OVERLAY)

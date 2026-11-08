@@ -57,9 +57,15 @@ public class RunaMenu {
 				.setSaveConsumer(v -> RunaConfig.brillo = v / 100f)
 				.build());
 
-		cat.addEntry(e.startColorField(Component.literal("Color (jugadores y mobs)"), RunaConfig.colorRgb())
+		cat.addEntry(e.startBooleanToggle(Component.literal("Usar un color propio"), RunaConfig.colorPersonalizado)
+				.setDefaultValue(false)
+				.setTooltip(Component.literal("Apagado: cada runa usa sus colores. Encendido: todas usan el color de abajo."))
+				.setSaveConsumer(v -> RunaConfig.colorPersonalizado = v)
+				.build());
+
+		cat.addEntry(e.startColorField(Component.literal("Color propio (jugadores y mobs)"), RunaConfig.colorRgb())
 				.setDefaultValue(0xFFFFFF)
-				.setTooltip(Component.literal("#FFFFFF deja los colores originales de la runa."))
+				.setTooltip(Component.literal("Se aplica solo si \"Usar un color propio\" está encendido."))
 				.setSaveConsumer(c -> RunaConfig.setColorRgb(c))
 				.build());
 
