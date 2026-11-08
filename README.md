@@ -48,3 +48,9 @@ Los mobs tienen tamaño, altura y distancia propios y se pueden desactivar.
 ## Capas que giran y color propio
 El `runa.json` de un .runa puede traer `"tinte"`, `"halo"` y una lista de `"capas"` (imágenes que giran detrás,
 con `"giro"` en grados por tick). En el menú, **Usar un color propio** cambia el color de cualquier runa.
+
+## Efectos extra
+- **Flecha con Poder**: al disparar con un arco con Poder aparece una runa delante y la flecha pasa por su centro.
+- **Objetos encantados**: rayos que giran alrededor y un resplandor (en el suelo y, aproximado, en la mano).
+- **Tridente encantado**: tres anillos grandes con letras de runas (en la mano, en el suelo y al lanzarlo).
+Todo se activa/desactiva y se colorea en el menú → **Efectos**.

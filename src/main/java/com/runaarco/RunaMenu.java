@@ -105,6 +105,42 @@ public class RunaMenu {
 				.setSaveConsumer(v -> RunaConfig.distanciaMobs = v / 10f)
 				.build());
 
+
+		// ===== EFECTOS EXTRA =====
+		ConfigCategory fx = b.getOrCreateCategory(Component.literal("Efectos"));
+
+		fx.addEntry(e.startBooleanToggle(Component.literal("Runa en la flecha (arco con Poder)"), RunaConfig.flechaPoder)
+				.setDefaultValue(true)
+				.setTooltip(Component.literal("La flecha de un arco con Poder pasa por una runa al salir."))
+				.setSaveConsumer(v -> RunaConfig.flechaPoder = v)
+				.build());
+
+		fx.addEntry(e.startBooleanToggle(Component.literal("Rayos en objetos encantados (suelo)"), RunaConfig.rayosObjetos)
+				.setDefaultValue(true)
+				.setSaveConsumer(v -> RunaConfig.rayosObjetos = v)
+				.build());
+
+		fx.addEntry(e.startBooleanToggle(Component.literal("Rayos en objetos encantados (en la mano)"), RunaConfig.rayosEnMano)
+				.setDefaultValue(true)
+				.setTooltip(Component.literal("La posición en la mano es aproximada."))
+				.setSaveConsumer(v -> RunaConfig.rayosEnMano = v)
+				.build());
+
+		fx.addEntry(e.startColorField(Component.literal("Color de los rayos"), RunaConfig.rayoRgb)
+				.setDefaultValue(0xA8E0FF)
+				.setSaveConsumer(c -> RunaConfig.rayoRgb = c)
+				.build());
+
+		fx.addEntry(e.startBooleanToggle(Component.literal("Anillos de runas en el tridente"), RunaConfig.anillosTridente)
+				.setDefaultValue(true)
+				.setSaveConsumer(v -> RunaConfig.anillosTridente = v)
+				.build());
+
+		fx.addEntry(e.startColorField(Component.literal("Color de los anillos"), RunaConfig.anillosRgb)
+				.setDefaultValue(0x7FF0FF)
+				.setSaveConsumer(c -> RunaConfig.anillosRgb = c)
+				.build());
+
 		return b.build();
 	}
 }

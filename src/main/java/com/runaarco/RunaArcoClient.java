@@ -96,11 +96,12 @@ public class RunaArcoClient implements ClientModInitializer {
 				Vec3 center = new Vec3(pos.x - dx * dist, pos.y + alt, pos.z - dz * dist);
 				RUNES.add(new Rune(center, yaw, charge, le.tickCount + pt, mob));
 			}
+
+			RunaEfectos.extraer(ctx.level(), pt, cameraPos);
 		});
 
 		// 2) Dibujarlas
 		LevelRenderEvents.COLLECT_SUBMITS.register(ctx -> {
-			if (RUNES.isEmpty()) return;
 			PoseStack ps = ctx.poseStack();
 			SubmitNodeCollector out = ctx.submitNodeCollector();
 
@@ -116,44 +117,52 @@ public class RunaArcoClient implements ClientModInitializer {
 				float flicker = 0.88f + 0.12f * Mth.sin(t * 0.8f) * Mth.sin(t * 0.31f);
 				int alpha = (int) Math.min(255f, 255 * c * flicker * RunaConfig.brillo);
 
+				int rgbRuna = RunaConfig.colorPersonalizado ? RunaConfig.colorRgb() : ru.tinte();
+				int rgbHalo = RunaConfig.colorPersonalizado ? RunaConfig.colorRgb() : ru.halo();
+
 				ps.pushPose();
 				ps.translate(r.center().x - cameraPos.x,
 						r.center().y - cameraPos.y + bob,
 						r.center().z - cameraPos.z);
 				ps.mulPose(Axis.YP.rotationDegrees(-r.yaw()));
-
-				int rgbRuna = RunaConfig.colorPersonalizado ? RunaConfig.colorRgb() : ru.tinte();
-				int rgbHalo = RunaConfig.colorPersonalizado ? RunaConfig.colorRgb() : ru.halo();
-
-				// halo que respira detrás
-				float halo = 1.15f + 0.1f * Mth.sin(t * 0.2f);
-				quad(out, ps, TEX_GLOW, size * halo * 1.1f, size * halo * 1.1f, -0.004f, (int) (alpha * 0.75f), rgbHalo);
-
-				// capas que giran detrás (círculos mágicos, etc.)
-				RunaLibrary.Capa[] capas = ru.capas();
-				for (int ci = 0; ci < capas.length; ci++) {
-					ps.pushPose();
-					ps.mulPose(Axis.ZP.rotationDegrees(capas[ci].giro() * t));
-					quad(out, ps, capas[ci].id(), size, size * ru.aspecto(), -0.003f - 0.0002f * ci, alpha, rgbRuna);
-					ps.popPose();
-				}
-
-				// eco mágico: copia que se expande y se desvanece cada 30 ticks
-				float phase = (t % 30f) / 30f;
-				int echoAlpha = (int) (alpha * 0.45f * (1f - phase));
-				if (echoAlpha > 2) {
-					animated(out, ps, ru, t, size * (1f + 0.35f * phase), -0.002f, echoAlpha, rgbRuna);
-				}
-
-				// la runa, con su animación
-				animated(out, ps, ru, t, size, 0f, alpha, rgbRuna);
+				dibujarRuna(out, ps, ru, t, size, alpha, rgbRuna, rgbHalo);
 				ps.popPose();
 			}
+
+			// efectos extra: flecha con Poder, objetos encantados, tridente
+			RunaEfectos.dibujar(ps, out, cameraPos);
 		});
 	}
 
+	/** Halo + capas que giran + eco + la runa animada, centrados en la posición actual del PoseStack. */
+	static void dibujarRuna(SubmitNodeCollector out, PoseStack ps, RunaLibrary.Runa ru,
+							float t, float size, int alpha, int rgbRuna, int rgbHalo) {
+		// halo que respira detrás
+		float halo = 1.15f + 0.1f * Mth.sin(t * 0.2f);
+		quad(out, ps, TEX_GLOW, size * halo * 1.1f, size * halo * 1.1f, -0.004f, (int) (alpha * 0.75f), rgbHalo);
+
+		// capas que giran detrás (círculos mágicos, etc.)
+		RunaLibrary.Capa[] capas = ru.capas();
+		for (int ci = 0; ci < capas.length; ci++) {
+			ps.pushPose();
+			ps.mulPose(Axis.ZP.rotationDegrees(capas[ci].giro() * t));
+			quad(out, ps, capas[ci].id(), size, size * ru.aspecto(), -0.003f - 0.0002f * ci, alpha, rgbRuna);
+			ps.popPose();
+		}
+
+		// eco mágico: copia que se expande y se desvanece cada 30 ticks
+		float phase = (t % 30f) / 30f;
+		int echoAlpha = (int) (alpha * 0.45f * (1f - phase));
+		if (echoAlpha > 2) {
+			animated(out, ps, ru, t, size * (1f + 0.35f * phase), -0.002f, echoAlpha, rgbRuna);
+		}
+
+		// la runa, con su animación
+		animated(out, ps, ru, t, size, 0f, alpha, rgbRuna);
+	}
+
 	/** Dibuja el cuadro actual y, si el .runa lo pide, lo mezcla con el siguiente. */
-	private static void animated(SubmitNodeCollector out, PoseStack ps, RunaLibrary.Runa ru,
+	static void animated(SubmitNodeCollector out, PoseStack ps, RunaLibrary.Runa ru,
 								 float t, float half, float z, int alpha, int rgb) {
 		Identifier[] fr = ru.frames();
 		int n = fr.length;
@@ -171,7 +180,7 @@ public class RunaArcoClient implements ClientModInitializer {
 	}
 
 	/** Un cuadrado con textura, visible por ambos lados. */
-	private static void quad(SubmitNodeCollector out, PoseStack ps, Identifier tex,
+	static void quad(SubmitNodeCollector out, PoseStack ps, Identifier tex,
 							 float halfW, float halfH, float zOff, int alpha, int rgb) {
 		if (alpha <= 0) return;
 		out.submitCustomGeometry(ps, RenderTypes.eyes(tex), (pose, vc) -> {

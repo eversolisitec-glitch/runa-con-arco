@@ -25,6 +25,13 @@ public class RunaConfig {
 		public float alturaMobs = 2.3f;
 		public float distanciaMobs = 0.9f;
 		public String runaMobs = "";
+		// --- Efectos extra ---
+		public boolean flechaPoder = true;       // runa por la que pasa la flecha de un arco con Poder
+		public boolean rayosObjetos = true;      // rayos alrededor de objetos encantados (en el suelo)
+		public boolean rayosEnMano = true;       // lo mismo, en la mano de jugadores y mobs
+		public boolean anillosTridente = true;   // anillos con runas en el tridente encantado
+		public String colorRayo = "#A8E0FF";
+		public String colorAnillos = "#7FF0FF";
 		// --- Común ---
 		public float brillo = 1.0f;      // 1.0 normal; 0.5 tenue; 1.5 más intenso
 		public boolean colorPersonalizado = false; // false = colores propios de cada runa
@@ -39,6 +46,8 @@ public class RunaConfig {
 	public static float tamanoMobs = 1.4f, alturaMobs = 2.3f, distanciaMobs = 0.9f;
 	public static boolean mobsActivos = true;
 	public static boolean colorPersonalizado = false;
+	public static boolean flechaPoder = true, rayosObjetos = true, rayosEnMano = true, anillosTridente = true;
+	public static int rayoRgb = 0xA8E0FF, anillosRgb = 0x7FF0FF;
 	public static int rojo = 255, verde = 255, azul = 255;
 	public static String runa = "";
 	public static String runaMobs = "";
@@ -75,6 +84,12 @@ public class RunaConfig {
 			runaMobs = d.runaMobs == null ? "" : d.runaMobs.trim();
 			brillo = clamp(d.brillo, 0f, 3f);
 			colorPersonalizado = d.colorPersonalizado;
+			flechaPoder = d.flechaPoder;
+			rayosObjetos = d.rayosObjetos;
+			rayosEnMano = d.rayosEnMano;
+			anillosTridente = d.anillosTridente;
+			rayoRgb = parseColor(d.colorRayo);
+			anillosRgb = parseColor(d.colorAnillos);
 			setColorRgb(parseColor(d.color));
 		} catch (Exception e) {
 			// Si el archivo tiene un error, se conservan los valores anteriores
@@ -96,6 +111,12 @@ public class RunaConfig {
 			d.runaMobs = runaMobs;
 			d.brillo = brillo;
 			d.colorPersonalizado = colorPersonalizado;
+			d.flechaPoder = flechaPoder;
+			d.rayosObjetos = rayosObjetos;
+			d.rayosEnMano = rayosEnMano;
+			d.anillosTridente = anillosTridente;
+			d.colorRayo = String.format("#%06X", rayoRgb);
+			d.colorAnillos = String.format("#%06X", anillosRgb);
 			d.color = String.format("#%02X%02X%02X", rojo, verde, azul);
 			Files.writeString(FILE, GSON.toJson(d));
 			ultimaModificacion = Files.getLastModifiedTime(FILE).toMillis();
