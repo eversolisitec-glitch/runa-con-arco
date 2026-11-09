@@ -67,3 +67,7 @@ La estela es un haz de luz que sigue la trayectoria de la flecha y se apaga poco
 Los anillos rodean al tridente en tu mano (en primera persona se colocan respecto a la cámara) y también
 mientras vuela cuando lo lanzas. Se ajustan en el menú → **Tridente (ajustes)**: tamaño, lado, altura,
 distancia delante e inclinación en primera persona, y tamaño del tridente lanzado.
+
+## Anillos del tridente (3D)
+Son tres bandas en 3D con letras de runas que giran alrededor del tridente, visibles desde cualquier cámara.
+Tamaño, separación, alto y color se ajustan en el menú → **Tridente (ajustes)** y **Efectos**.
