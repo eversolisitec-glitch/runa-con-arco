@@ -54,3 +54,16 @@ con `"giro"` en grados por tick). En el menú, **Usar un color propio** cambia e
 - **Objetos encantados**: rayos que giran alrededor y un resplandor (en el suelo y, aproximado, en la mano).
 - **Tridente encantado**: tres anillos grandes con letras de runas (en la mano, en el suelo y al lanzarlo).
 Todo se activa/desactiva y se colorea en el menú → **Efectos**.
+
+## Tamaños y haz de luz de la flecha
+En el menú → **Efectos**: tamaño de la runa de la flecha, de los rayos y de los anillos del tridente (en %),
+y el haz de luz que sigue a la flecha (grosor, duración, color; por defecto solo con arco con Poder).
+
+## Tamaño, posición y estela
+Menú → **Tamaño de efectos**, **Posición de efectos** y **Estela de la flecha** (o los mismos campos en `config/runaarco.json`).
+La estela es un haz de luz que sigue la trayectoria de la flecha y se apaga poco a poco.
+
+## Tridente en primera persona y lanzado
+Los anillos rodean al tridente en tu mano (en primera persona se colocan respecto a la cámara) y también
+mientras vuela cuando lo lanzas. Se ajustan en el menú → **Tridente (ajustes)**: tamaño, lado, altura,
+distancia delante e inclinación en primera persona, y tamaño del tridente lanzado.

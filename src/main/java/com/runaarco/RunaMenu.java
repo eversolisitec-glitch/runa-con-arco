@@ -131,6 +131,54 @@ public class RunaMenu {
 				.setSaveConsumer(c -> RunaConfig.rayoRgb = c)
 				.build());
 
+
+		// --- Tamaños de los efectos (en porcentaje) ---
+		fx.addEntry(e.startIntSlider(Component.literal("Tamaño de la runa de la flecha"), Math.round(RunaConfig.tamanoRunaFlecha * 100), 20, 400)
+				.setDefaultValue(100)
+				.setTextGetter(v -> Component.literal(v + " %"))
+				.setSaveConsumer(v -> RunaConfig.tamanoRunaFlecha = v / 100f)
+				.build());
+
+		fx.addEntry(e.startIntSlider(Component.literal("Tamaño de los rayos"), Math.round(RunaConfig.tamanoRayos * 100), 20, 500)
+				.setDefaultValue(100)
+				.setTextGetter(v -> Component.literal(v + " %"))
+				.setSaveConsumer(v -> RunaConfig.tamanoRayos = v / 100f)
+				.build());
+
+		fx.addEntry(e.startIntSlider(Component.literal("Tamaño de los anillos del tridente"), Math.round(RunaConfig.tamanoAnillos * 100), 20, 400)
+				.setDefaultValue(100)
+				.setTextGetter(v -> Component.literal(v + " %"))
+				.setSaveConsumer(v -> RunaConfig.tamanoAnillos = v / 100f)
+				.build());
+
+		// --- Haz de luz de la flecha ---
+		fx.addEntry(e.startBooleanToggle(Component.literal("Haz de luz en la trayectoria de la flecha"), RunaConfig.estela)
+				.setDefaultValue(true)
+				.setSaveConsumer(v -> RunaConfig.estela = v)
+				.build());
+
+		fx.addEntry(e.startBooleanToggle(Component.literal("Haz en todas las flechas (apagado: solo arco con Poder)"), RunaConfig.estelaTodas)
+				.setDefaultValue(false)
+				.setSaveConsumer(v -> RunaConfig.estelaTodas = v)
+				.build());
+
+		fx.addEntry(e.startIntSlider(Component.literal("Grosor del haz"), Math.round(RunaConfig.anchoEstela * 100), 2, 80)
+				.setDefaultValue(12)
+				.setTextGetter(v -> Component.literal(String.format("%.2f bloques", v / 100f)))
+				.setSaveConsumer(v -> RunaConfig.anchoEstela = v / 100f)
+				.build());
+
+		fx.addEntry(e.startIntSlider(Component.literal("Duración del haz"), RunaConfig.duracionEstela, 4, 80)
+				.setDefaultValue(16)
+				.setTextGetter(v -> Component.literal(String.format("%.1f s", v / 20f)))
+				.setSaveConsumer(v -> RunaConfig.duracionEstela = v)
+				.build());
+
+		fx.addEntry(e.startColorField(Component.literal("Color del haz"), RunaConfig.estelaRgb)
+				.setDefaultValue(0xBFE8FF)
+				.setSaveConsumer(c -> RunaConfig.estelaRgb = c)
+				.build());
+
 		fx.addEntry(e.startBooleanToggle(Component.literal("Anillos de runas en el tridente"), RunaConfig.anillosTridente)
 				.setDefaultValue(true)
 				.setSaveConsumer(v -> RunaConfig.anillosTridente = v)
@@ -139,6 +187,126 @@ public class RunaMenu {
 		fx.addEntry(e.startColorField(Component.literal("Color de los anillos"), RunaConfig.anillosRgb)
 				.setDefaultValue(0x7FF0FF)
 				.setSaveConsumer(c -> RunaConfig.anillosRgb = c)
+				.build());
+
+
+		// ===== TAMAÑO DE LOS EFECTOS =====
+		ConfigCategory tam = b.getOrCreateCategory(Component.literal("Tamaño de efectos"));
+
+		tam.addEntry(e.startIntSlider(Component.literal("Rayos"), Math.round(RunaConfig.escalaRayos * 100), 20, 500)
+				.setDefaultValue(100)
+				.setTextGetter(v -> Component.literal(v + " %"))
+				.setSaveConsumer(v -> RunaConfig.escalaRayos = v / 100f)
+				.build());
+		tam.addEntry(e.startIntSlider(Component.literal("Anillos del tridente"), Math.round(RunaConfig.escalaAnillos * 100), 20, 500)
+				.setDefaultValue(100)
+				.setTextGetter(v -> Component.literal(v + " %"))
+				.setSaveConsumer(v -> RunaConfig.escalaAnillos = v / 100f)
+				.build());
+		tam.addEntry(e.startIntSlider(Component.literal("Runa de la flecha"), Math.round(RunaConfig.escalaFlecha * 100), 20, 500)
+				.setDefaultValue(100)
+				.setTextGetter(v -> Component.literal(v + " %"))
+				.setSaveConsumer(v -> RunaConfig.escalaFlecha = v / 100f)
+				.build());
+		tam.addEntry(e.startIntSlider(Component.literal("Grosor de la estela de luz"), Math.round(RunaConfig.grosorEstela * 100), 1, 100)
+				.setDefaultValue(12)
+				.setTextGetter(v -> Component.literal(String.format("%.2f bloques", v / 100f)))
+				.setSaveConsumer(v -> RunaConfig.grosorEstela = v / 100f)
+				.build());
+
+		// ===== POSICIÓN DE LOS EFECTOS =====
+		ConfigCategory pos = b.getOrCreateCategory(Component.literal("Posición de efectos"));
+
+		pos.addEntry(e.startIntSlider(Component.literal("Runa de la flecha: distancia delante"), Math.round(RunaConfig.delanteFlecha * 10), 0, 100)
+				.setDefaultValue(18)
+				.setTextGetter(v -> Component.literal(String.format("%.1f bloques", v / 10f)))
+				.setSaveConsumer(v -> RunaConfig.delanteFlecha = v / 10f)
+				.build());
+		pos.addEntry(e.startIntSlider(Component.literal("Runa de la flecha: altura"), Math.round(RunaConfig.alturaFlecha * 10), -30, 30)
+				.setDefaultValue(0)
+				.setTextGetter(v -> Component.literal(String.format("%+.1f bloques", v / 10f)))
+				.setSaveConsumer(v -> RunaConfig.alturaFlecha = v / 10f)
+				.build());
+		pos.addEntry(e.startIntSlider(Component.literal("Rayos: altura"), Math.round(RunaConfig.alturaRayos * 10), -30, 30)
+				.setDefaultValue(0)
+				.setTextGetter(v -> Component.literal(String.format("%+.1f bloques", v / 10f)))
+				.setSaveConsumer(v -> RunaConfig.alturaRayos = v / 10f)
+				.build());
+		pos.addEntry(e.startIntSlider(Component.literal("Anillos del tridente: a lo largo"), Math.round(RunaConfig.anillosAdelante * 10), -30, 30)
+				.setDefaultValue(0)
+				.setTextGetter(v -> Component.literal(String.format("%+.1f bloques", v / 10f)))
+				.setSaveConsumer(v -> RunaConfig.anillosAdelante = v / 10f)
+				.build());
+		pos.addEntry(e.startIntSlider(Component.literal("Objeto en la mano: lado"), Math.round(RunaConfig.manoLado * 10), -30, 30)
+				.setDefaultValue(4)
+				.setTextGetter(v -> Component.literal(String.format("%+.1f bloques", v / 10f)))
+				.setSaveConsumer(v -> RunaConfig.manoLado = v / 10f)
+				.build());
+		pos.addEntry(e.startIntSlider(Component.literal("Objeto en la mano: delante"), Math.round(RunaConfig.manoAdelante * 10), -30, 30)
+				.setDefaultValue(5)
+				.setTextGetter(v -> Component.literal(String.format("%+.1f bloques", v / 10f)))
+				.setSaveConsumer(v -> RunaConfig.manoAdelante = v / 10f)
+				.build());
+		pos.addEntry(e.startIntSlider(Component.literal("Objeto en la mano: altura"), Math.round(RunaConfig.manoAltura * 10), -30, 30)
+				.setDefaultValue(0)
+				.setTextGetter(v -> Component.literal(String.format("%+.1f bloques", v / 10f)))
+				.setSaveConsumer(v -> RunaConfig.manoAltura = v / 10f)
+				.build());
+
+		// ===== ESTELA DE LUZ DE LA FLECHA =====
+		ConfigCategory est = b.getOrCreateCategory(Component.literal("Estela de la flecha"));
+
+		est.addEntry(e.startBooleanToggle(Component.literal("Estela de luz en la trayectoria"), RunaConfig.estela)
+				.setDefaultValue(true)
+				.setSaveConsumer(v -> RunaConfig.estela = v)
+				.build());
+		est.addEntry(e.startBooleanToggle(Component.literal("Solo flechas de un arco con Poder"), RunaConfig.estelaSoloPoder)
+				.setDefaultValue(false)
+				.setSaveConsumer(v -> RunaConfig.estelaSoloPoder = v)
+				.build());
+		est.addEntry(e.startIntSlider(Component.literal("Duración"), Math.round(RunaConfig.vidaEstela), 5, 100)
+				.setDefaultValue(25)
+				.setTextGetter(v -> Component.literal(String.format("%.1f segundos", v / 20f)))
+				.setSaveConsumer(v -> RunaConfig.vidaEstela = v)
+				.build());
+		est.addEntry(e.startColorField(Component.literal("Color de la estela"), RunaConfig.estelaRgb)
+				.setDefaultValue(0xBFE9FF)
+				.setSaveConsumer(c -> RunaConfig.estelaRgb = c)
+				.build());
+
+
+		// ===== TRIDENTE Y OBJETO EN TU MANO (PRIMERA PERSONA) =====
+		ConfigCategory tri = b.getOrCreateCategory(Component.literal("Tridente (ajustes)"));
+
+		tri.addEntry(e.startIntSlider(Component.literal("Primera persona: tamaño"), Math.round(RunaConfig.fpEscala * 100), 5, 300)
+				.setDefaultValue(35)
+				.setTextGetter(v -> Component.literal(v + " %"))
+				.setSaveConsumer(v -> RunaConfig.fpEscala = v / 100f)
+				.build());
+		tri.addEntry(e.startIntSlider(Component.literal("Primera persona: lado"), Math.round(RunaConfig.fpLado * 100), -150, 150)
+				.setDefaultValue(50)
+				.setTextGetter(v -> Component.literal(String.format("%+.2f bloques", v / 100f)))
+				.setSaveConsumer(v -> RunaConfig.fpLado = v / 100f)
+				.build());
+		tri.addEntry(e.startIntSlider(Component.literal("Primera persona: altura"), Math.round(RunaConfig.fpAltura * 100), -150, 150)
+				.setDefaultValue(-30)
+				.setTextGetter(v -> Component.literal(String.format("%+.2f bloques", v / 100f)))
+				.setSaveConsumer(v -> RunaConfig.fpAltura = v / 100f)
+				.build());
+		tri.addEntry(e.startIntSlider(Component.literal("Primera persona: distancia delante"), Math.round(RunaConfig.fpAdelante * 100), 0, 200)
+				.setDefaultValue(85)
+				.setTextGetter(v -> Component.literal(String.format("%.2f bloques", v / 100f)))
+				.setSaveConsumer(v -> RunaConfig.fpAdelante = v / 100f)
+				.build());
+		tri.addEntry(e.startIntSlider(Component.literal("Primera persona: inclinación"), Math.round(RunaConfig.fpInclinacion), -90, 90)
+				.setDefaultValue(45)
+				.setTextGetter(v -> Component.literal(v + " grados"))
+				.setSaveConsumer(v -> RunaConfig.fpInclinacion = v)
+				.build());
+		tri.addEntry(e.startIntSlider(Component.literal("Tridente lanzado: tamaño"), Math.round(RunaConfig.escalaLanzado * 100), 10, 400)
+				.setDefaultValue(80)
+				.setTextGetter(v -> Component.literal(v + " %"))
+				.setSaveConsumer(v -> RunaConfig.escalaLanzado = v / 100f)
 				.build());
 
 		return b.build();

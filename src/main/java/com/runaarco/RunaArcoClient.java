@@ -34,7 +34,7 @@ public class RunaArcoClient implements ClientModInitializer {
 	static final double DISTANCIA_MAX_MOBS = 48.0; // no se dibuja en mobs más lejos que esto
 	static final int MAX_RUNAS = 48;
 
-	private static final int FULL_BRIGHT = 0xF000F0; // luz máxima (15,15)
+	static final int FULL_BRIGHT = 0xF000F0; // luz máxima (15,15)
 
 	private static final Identifier TEX_GLOW = id("textures/rune/glow.png");
 
