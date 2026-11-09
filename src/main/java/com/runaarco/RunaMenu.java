@@ -138,7 +138,7 @@ public class RunaMenu {
 				.build());
 
 		fx.addEntry(e.startColorField(Component.literal("Color de los anillos"), RunaConfig.anillosRgb)
-				.setDefaultValue(0x7FF0FF)
+				.setDefaultValue(0xBFFFEF)
 				.setSaveConsumer(c -> RunaConfig.anillosRgb = c)
 				.build());
 
@@ -231,10 +231,15 @@ public class RunaMenu {
 		// ===== TRIDENTE Y OBJETO EN TU MANO (PRIMERA PERSONA) =====
 		ConfigCategory tri = b.getOrCreateCategory(Component.literal("Tridente (ajustes)"));
 
-		tri.addEntry(e.startIntSlider(Component.literal("Primera persona: tamaño"), Math.round(RunaConfig.fpEscala * 100), 5, 300)
-				.setDefaultValue(35)
+		tri.addEntry(e.startIntSlider(Component.literal("Primera persona: tamaño de los rayos"), Math.round(RunaConfig.fpEscala * 100), 5, 300)
+				.setDefaultValue(60)
 				.setTextGetter(v -> Component.literal(v + " %"))
 				.setSaveConsumer(v -> RunaConfig.fpEscala = v / 100f)
+				.build());
+		tri.addEntry(e.startIntSlider(Component.literal("Primera persona: tamaño de los anillos"), Math.round(RunaConfig.fpEscalaAnillos * 100), 10, 400)
+				.setDefaultValue(100)
+				.setTextGetter(v -> Component.literal(v + " %"))
+				.setSaveConsumer(v -> RunaConfig.fpEscalaAnillos = v / 100f)
 				.build());
 		tri.addEntry(e.startIntSlider(Component.literal("Primera persona: lado"), Math.round(RunaConfig.fpLado * 100), -150, 150)
 				.setDefaultValue(50)
@@ -257,9 +262,19 @@ public class RunaMenu {
 				.setSaveConsumer(v -> RunaConfig.fpInclinacion = v)
 				.build());
 		tri.addEntry(e.startIntSlider(Component.literal("Tridente lanzado: tamaño"), Math.round(RunaConfig.escalaLanzado * 100), 10, 400)
-				.setDefaultValue(80)
+				.setDefaultValue(100)
 				.setTextGetter(v -> Component.literal(v + " %"))
 				.setSaveConsumer(v -> RunaConfig.escalaLanzado = v / 100f)
+				.build());
+		tri.addEntry(e.startIntSlider(Component.literal("Separación entre los 3 anillos"), Math.round(RunaConfig.separacionAnillos * 100), 5, 300)
+				.setDefaultValue(45)
+				.setTextGetter(v -> Component.literal(String.format("%.2f bloques", v / 100f)))
+				.setSaveConsumer(v -> RunaConfig.separacionAnillos = v / 100f)
+				.build());
+		tri.addEntry(e.startIntSlider(Component.literal("Alto de cada anillo"), Math.round(RunaConfig.altoAnillos * 100), 2, 100)
+				.setDefaultValue(11)
+				.setTextGetter(v -> Component.literal(String.format("%.2f bloques", v / 100f)))
+				.setSaveConsumer(v -> RunaConfig.altoAnillos = v / 100f)
 				.build());
 
 		return b.build();

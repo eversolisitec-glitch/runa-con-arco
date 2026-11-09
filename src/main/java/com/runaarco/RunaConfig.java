@@ -31,12 +31,14 @@ public class RunaConfig {
 		public boolean rayosEnMano = true;       // lo mismo, en la mano de jugadores y mobs
 		public boolean anillosTridente = true;   // anillos con runas en el tridente encantado
 		public String colorRayo = "#A8E0FF";
-		public String colorAnillos = "#7FF0FF";
+		public String colorAnillos = "#BFFFEF";
 		// tamaños (1.0 = normal)
 		public float escalaRayos = 1.0f;
 		public float escalaAnillos = 1.0f;
 		public float escalaFlecha = 1.0f;     // runa por la que pasa la flecha
-		public float escalaLanzado = 0.8f;    // anillos en el tridente lanzado
+		public float escalaLanzado = 1.0f;    // anillos en el tridente lanzado
+		public float separacionAnillos = 0.45f; // distancia entre los 3 anillos del tridente (bloques)
+		public float altoAnillos = 0.11f;     // alto de cada anillo (bloques)
 		// posiciones (en bloques)
 		public float delanteFlecha = 1.8f;    // distancia delante de los ojos a la que aparece la runa de la flecha
 		public float alturaFlecha = 0.0f;     // sube/baja la runa de la flecha
@@ -50,7 +52,8 @@ public class RunaConfig {
 		public float fpAltura = -0.30f;
 		public float fpAdelante = 0.85f;
 		public float fpInclinacion = 45f;     // grados: cuánto apunta el eje hacia arriba respecto a la mirada
-		public float fpEscala = 0.35f;        // tamaño de los efectos en primera persona
+		public float fpEscala = 0.6f;         // tamaño de los rayos en primera persona
+		public float fpEscalaAnillos = 1.0f;  // tamaño de los anillos en primera persona
 		// estela de luz de la flecha
 		public boolean estela = true;
 		public boolean estelaSoloPoder = false; // true = solo flechas de un arco con Poder
@@ -75,11 +78,12 @@ public class RunaConfig {
 	public static String runaMobs = "";
 	// Efectos extra
 	public static boolean flechaPoder = true, rayosObjetos = true, rayosEnMano = true, anillosTridente = true;
-	public static int rayoRgb = 0xA8E0FF, anillosRgb = 0x7FF0FF, estelaRgb = 0xBFE9FF;
-	public static float escalaRayos = 1f, escalaAnillos = 1f, escalaFlecha = 1f, escalaLanzado = 0.8f;
+	public static int rayoRgb = 0xA8E0FF, anillosRgb = 0xBFFFEF, estelaRgb = 0xBFE9FF;
+	public static float escalaRayos = 1f, escalaAnillos = 1f, escalaFlecha = 1f, escalaLanzado = 1f;
+	public static float separacionAnillos = 0.45f, altoAnillos = 0.11f, fpEscalaAnillos = 1f;
 	public static float delanteFlecha = 1.8f, alturaFlecha = 0f, alturaRayos = 0f, anillosAdelante = 0f;
 	public static float manoLado = 0.38f, manoAdelante = 0.45f, manoAltura = 0f;
-	public static float fpLado = 0.50f, fpAltura = -0.30f, fpAdelante = 0.85f, fpInclinacion = 45f, fpEscala = 0.35f;
+	public static float fpLado = 0.50f, fpAltura = -0.30f, fpAdelante = 0.85f, fpInclinacion = 45f, fpEscala = 0.6f;
 	public static boolean estela = true, estelaSoloPoder = false;
 	public static float grosorEstela = 0.12f, vidaEstela = 25f;
 	// Común
@@ -132,6 +136,9 @@ public class RunaConfig {
 			escalaAnillos = clamp(d.escalaAnillos, 0.2f, 5f);
 			escalaFlecha = clamp(d.escalaFlecha, 0.2f, 5f);
 			escalaLanzado = clamp(d.escalaLanzado, 0.1f, 5f);
+			separacionAnillos = clamp(d.separacionAnillos, 0.05f, 3f);
+			altoAnillos = clamp(d.altoAnillos, 0.02f, 1f);
+			fpEscalaAnillos = clamp(d.fpEscalaAnillos, 0.1f, 5f);
 			delanteFlecha = clamp(d.delanteFlecha, 0f, 10f);
 			alturaFlecha = clamp(d.alturaFlecha, -5f, 5f);
 			alturaRayos = clamp(d.alturaRayos, -5f, 5f);
@@ -181,6 +188,9 @@ public class RunaConfig {
 			d.escalaAnillos = escalaAnillos;
 			d.escalaFlecha = escalaFlecha;
 			d.escalaLanzado = escalaLanzado;
+			d.separacionAnillos = separacionAnillos;
+			d.altoAnillos = altoAnillos;
+			d.fpEscalaAnillos = fpEscalaAnillos;
 			d.delanteFlecha = delanteFlecha;
 			d.alturaFlecha = alturaFlecha;
 			d.alturaRayos = alturaRayos;

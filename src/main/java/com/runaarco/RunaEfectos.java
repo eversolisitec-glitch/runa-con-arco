@@ -41,7 +41,7 @@ final class RunaEfectos {
 	static final float VIDA_DISPARO = 30f;      // ticks que dura la runa de la flecha
 
 	private static final Identifier TEX_GLOW = id("textures/rune/glow.png");
-	private static final Identifier TEX_ANILLO = id("textures/rune/anillo.png");
+	private static final Identifier TEX_BANDA = id("textures/rune/banda.png");
 	private static final Identifier TEX_HAZ = id("textures/rune/haz.png");
 	private static final Identifier[] RAYO = {
 			id("textures/rune/rayo_0.png"), id("textures/rune/rayo_1.png"),
@@ -52,7 +52,8 @@ final class RunaEfectos {
 	}
 
 	private record Disparo(Vec3 centro, float yaw, float pitch, float inicio, boolean mob) {}
-	private record Objeto(Vec3 pos, float yaw, float pitch, boolean tridente, int semilla, float escala) {}
+	private record Objeto(Vec3 pos, float yaw, float pitch, boolean tridente, int semilla,
+						  float escala, float escalaAnillo) {}
 	private record Punto(Vec3 pos, float t) {}
 
 	private static final List<Disparo> DISPAROS = new ArrayList<>();
@@ -84,7 +85,7 @@ final class RunaEfectos {
 				ItemStack s = ie.getItem();
 				if (RunaConfig.rayosObjetos && s.isEnchanted() && OBJETOS.size() < MAX_OBJETOS) {
 					OBJETOS.add(new Objeto(ie.getPosition(pt).add(0, 0.35, 0), 0f, -90f,
-							s.is(Items.TRIDENT), e.getId(), 1f));
+							s.is(Items.TRIDENT), e.getId(), 1f, 1f));
 				}
 			} else if (tipo == EntityType.TRIDENT) {
 				tridentes.add(e);
@@ -131,7 +132,7 @@ final class RunaEfectos {
 				double h = Math.sqrt(v.x * v.x + v.z * v.z);
 				float yaw = (float) Math.toDegrees(Math.atan2(-v.x, v.z));
 				float pitch = (float) -Math.toDegrees(Math.atan2(v.y, h));
-				OBJETOS.add(new Objeto(t.getPosition(pt), yaw, pitch, true, id, RunaConfig.escalaLanzado));
+				OBJETOS.add(new Objeto(t.getPosition(pt), yaw, pitch, true, id, 1f, RunaConfig.escalaLanzado));
 			}
 		}
 		TRI_DECIDIDOS.retainAll(triVistos);
@@ -207,7 +208,7 @@ final class RunaEfectos {
 		Vec3 p = new Vec3(base.x + rx * lado + fx * adelante,
 				base.y + le.getBbHeight() * 0.58 + RunaConfig.manoAltura,
 				base.z + rz * lado + fz * adelante);
-		return new Objeto(p, yaw, pitch, tridente, le.getId(), 1f);
+		return new Objeto(p, yaw, pitch, tridente, le.getId(), 1f, 1f);
 	}
 
 	/**
@@ -227,7 +228,8 @@ final class RunaEfectos {
 				.add(r.scale(lado))
 				.add(u.scale(RunaConfig.fpAltura));
 		// el eje del objeto apunta hacia delante y hacia arriba (fpInclinacion grados sobre la mirada)
-		return new Objeto(p, yaw, pitch - RunaConfig.fpInclinacion, tridente, le.getId(), RunaConfig.fpEscala);
+		return new Objeto(p, yaw, pitch - RunaConfig.fpInclinacion, tridente, le.getId(),
+				RunaConfig.fpEscala, RunaConfig.fpEscalaAnillos);
 	}
 
 	private static boolean conPoder(ItemStack s) {
@@ -379,30 +381,75 @@ final class RunaEfectos {
 		}
 	}
 
-	/** Tres anillos grandes con letras de runas, girando en sentidos contrarios a lo largo del tridente. */
+	/**
+	 * Tres anillos en 3D (bandas con letras de runas) que giran alrededor del eje del tridente.
+	 * Al ser cilindros, se ven desde cualquier cámara (primera persona, tercera, de frente...).
+	 */
 	private static void anillos(SubmitNodeCollector out, PoseStack ps, Objeto o) {
 		int rgb = RunaConfig.anillosRgb;
 		float s = o.semilla();
-		float esc = RunaConfig.escalaAnillos * o.escala();
-		float pul = 0.85f + 0.15f * Mth.sin(ahora * 0.35f + s);
-		int alpha = (int) Math.min(255f, 230f * pul * RunaConfig.brillo);
+		float esc = RunaConfig.escalaAnillos * o.escalaAnillo();
+		float pul = 0.88f + 0.12f * Mth.sin(ahora * 0.35f + s);
+		int alpha = (int) Math.min(255f, 255f * pul * RunaConfig.brillo);
 
 		ps.pushPose();
 		ps.mulPose(Axis.YP.rotationDegrees(-o.yaw()));
 		ps.mulPose(Axis.XP.rotationDegrees(o.pitch()));
-		ps.translate(0f, 0f, RunaConfig.anillosAdelante * o.escala());   // desplaza los anillos a lo largo del tridente
+		ps.translate(0f, 0f, RunaConfig.anillosAdelante * esc);   // desplaza el conjunto a lo largo del tridente
 
-		RunaArcoClient.quad(out, ps, TEX_GLOW, 1.5f * esc, 1.5f * esc, -0.01f, (int) (alpha * 0.55f), rgb);
-		for (int i = 0; i < 3; i++) {
-			float radio = ((i == 1) ? 1.5f : 1.15f) * esc;
-			float desplazo = (i - 1) * 0.9f * esc;
-			float giro = ahora * ((i % 2 == 0) ? 5f : -7f) + s * 20f;
+		// brillo suave alrededor (dos planos cruzados para que se vea de lado)
+		for (int i = 0; i < 2; i++) {
 			ps.pushPose();
-			ps.translate(0f, 0f, desplazo);
-			ps.mulPose(Axis.ZP.rotationDegrees(giro));
-			RunaArcoClient.quad(out, ps, TEX_ANILLO, radio, radio, 0f, alpha, rgb);
+			if (i == 1) ps.mulPose(Axis.YP.rotationDegrees(90f));
+			RunaArcoClient.quad(out, ps, TEX_GLOW, 0.55f * esc, 0.75f * esc, 0f, (int) (alpha * 0.30f), rgb);
+			ps.popPose();
+		}
+
+		float[] tam = {0.85f, 1.15f, 0.85f};            // el del medio es algo más grande
+		float[] vel = {5f, -7f, 9f};                    // grados por tick, en sentidos alternos
+		for (int i = 0; i < 3; i++) {
+			float z = (i - 1) * RunaConfig.separacionAnillos * esc
+					+ 0.03f * esc * Mth.sin(ahora * 0.2f + i * 2.1f + s);    // sube y baja un poco
+			float radio = 0.32f * esc * tam[i];
+			float alto = RunaConfig.altoAnillos * esc;
+			ps.pushPose();
+			ps.translate(0f, 0f, z);
+			ps.mulPose(Axis.ZP.rotationDegrees(ahora * vel[i] + s * 20f + i * 40f));
+			banda(out, ps, radio, alto, alpha, rgb);
 			ps.popPose();
 		}
 		ps.popPose();
+	}
+
+	/** Cilindro abierto (banda) de radio y alto dados, con la textura de runas repetida dos veces. */
+	private static void banda(SubmitNodeCollector out, PoseStack ps, float radio, float alto, int alpha, int rgb) {
+		final int segmentos = 28;
+		final float repeticiones = 2f;
+		float b = Math.min(RunaConfig.brillo, 1f);
+		int cr = (int) (((rgb >> 16) & 255) * b), cg = (int) (((rgb >> 8) & 255) * b), cb = (int) ((rgb & 255) * b);
+		float h = alto * 0.5f;
+
+		out.submitCustomGeometry(ps, RenderTypes.eyes(TEX_BANDA), (pose, vc) -> {
+			for (int i = 0; i < segmentos; i++) {
+				float a0 = (float) (2 * Math.PI * i / segmentos);
+				float a1 = (float) (2 * Math.PI * (i + 1) / segmentos);
+				float c0 = Mth.cos(a0), s0 = Mth.sin(a0), c1 = Mth.cos(a1), s1 = Mth.sin(a1);
+				float u0 = repeticiones * i / segmentos, u1 = repeticiones * (i + 1) / segmentos;
+				for (int cara = 0; cara < 2; cara++) {
+					float n = cara == 0 ? 1f : -1f;   // cara exterior e interior
+					float[][] v = cara == 0
+							? new float[][]{{c0, s0, -h, u0, 1}, {c1, s1, -h, u1, 1}, {c1, s1, h, u1, 0}, {c0, s0, h, u0, 0}}
+							: new float[][]{{c1, s1, -h, u1, 1}, {c0, s0, -h, u0, 1}, {c0, s0, h, u0, 0}, {c1, s1, h, u1, 0}};
+					for (float[] p : v) {
+						vc.addVertex(pose, p[0] * radio, p[1] * radio, p[2])
+								.setColor(cr, cg, cb, alpha)
+								.setUv(p[3], p[4])
+								.setOverlay(OverlayTexture.NO_OVERLAY)
+								.setLight(0xF000F0)
+								.setNormal(pose, p[0] * n, p[1] * n, 0f);
+					}
+				}
+			}
+		});
 	}
 }
