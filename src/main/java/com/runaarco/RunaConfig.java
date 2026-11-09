@@ -30,35 +30,27 @@ public class RunaConfig {
 		public boolean rayosObjetos = true;      // rayos alrededor de objetos encantados (en el suelo)
 		public boolean rayosEnMano = true;       // lo mismo, en la mano de jugadores y mobs
 		public boolean anillosTridente = true;   // anillos con runas en el tridente encantado
-		public float tamanoRayos = 1.0f;         // multiplicador del tamaño de los rayos
-		public float tamanoAnillos = 1.0f;       // multiplicador del tamaño de los anillos del tridente
-		public float tamanoRunaFlecha = 1.0f;    // multiplicador del tamaño de la runa de la flecha
-		public boolean estela = true;            // haz de luz en la trayectoria de la flecha
-		public boolean estelaTodas = false;      // false = solo flechas de un arco con Poder
-		public float anchoEstela = 0.12f;        // grosor del haz en bloques
-		public int duracionEstela = 16;          // ticks que tarda en apagarse el haz
-		public String colorEstela = "#BFE8FF";
 		public String colorRayo = "#A8E0FF";
 		public String colorAnillos = "#7FF0FF";
 		// tamaños (1.0 = normal)
 		public float escalaRayos = 1.0f;
 		public float escalaAnillos = 1.0f;
 		public float escalaFlecha = 1.0f;     // runa por la que pasa la flecha
+		public float escalaLanzado = 0.8f;    // anillos en el tridente lanzado
 		// posiciones (en bloques)
 		public float delanteFlecha = 1.8f;    // distancia delante de los ojos a la que aparece la runa de la flecha
 		public float alturaFlecha = 0.0f;     // sube/baja la runa de la flecha
 		public float alturaRayos = 0.0f;      // sube/baja los rayos
 		public float anillosAdelante = 0.0f;  // desplaza los anillos a lo largo del tridente
-		public float manoLado = 0.38f;        // objeto en la mano: hacia el lado
-		public float manoAdelante = 0.45f;    //                    hacia delante
-		public float manoAltura = 0.0f;       //                    arriba/abajo
-		// tridente / objetos en TU mano en primera persona (respecto a la cámara)
+		public float manoLado = 0.38f;        // objeto en la mano (otros jugadores y mobs): hacia el lado
+		public float manoAdelante = 0.45f;    //                                              hacia delante
+		public float manoAltura = 0.0f;       //                                              arriba/abajo
+		// tu mano en primera persona (respecto a la cámara)
 		public float fpLado = 0.50f;
 		public float fpAltura = -0.30f;
 		public float fpAdelante = 0.85f;
 		public float fpInclinacion = 45f;     // grados: cuánto apunta el eje hacia arriba respecto a la mirada
 		public float fpEscala = 0.35f;        // tamaño de los efectos en primera persona
-		public float escalaLanzado = 0.8f;    // tamaño de los anillos en el tridente lanzado
 		// estela de luz de la flecha
 		public boolean estela = true;
 		public boolean estelaSoloPoder = false; // true = solo flechas de un arco con Poder
@@ -74,19 +66,26 @@ public class RunaConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("runaarco.json");
 
-	// Valores ya listos para usar
-	public static float tamano = 1.8f, altura = 2.4f, distancia = 1.0f, brillo = 1.0f;
+	// ===== Valores ya listos para usar =====
+	// Jugadores y mobs
+	public static float tamano = 1.8f, altura = 2.4f, distancia = 1.0f;
 	public static float tamanoMobs = 1.4f, alturaMobs = 2.3f, distanciaMobs = 0.9f;
 	public static boolean mobsActivos = true;
-	public static boolean colorPersonalizado = false;
-	public static boolean flechaPoder = true, rayosObjetos = true, rayosEnMano = true, anillosTridente = true;
-	public static int rayoRgb = 0xA8E0FF, anillosRgb = 0x7FF0FF, estelaRgb = 0xBFE8FF;
-	public static float tamanoRayos = 1f, tamanoAnillos = 1f, tamanoRunaFlecha = 1f, anchoEstela = 0.12f;
-	public static boolean estela = true, estelaTodas = false;
-	public static int duracionEstela = 16;
-	public static int rojo = 255, verde = 255, azul = 255;
 	public static String runa = "";
 	public static String runaMobs = "";
+	// Efectos extra
+	public static boolean flechaPoder = true, rayosObjetos = true, rayosEnMano = true, anillosTridente = true;
+	public static int rayoRgb = 0xA8E0FF, anillosRgb = 0x7FF0FF, estelaRgb = 0xBFE9FF;
+	public static float escalaRayos = 1f, escalaAnillos = 1f, escalaFlecha = 1f, escalaLanzado = 0.8f;
+	public static float delanteFlecha = 1.8f, alturaFlecha = 0f, alturaRayos = 0f, anillosAdelante = 0f;
+	public static float manoLado = 0.38f, manoAdelante = 0.45f, manoAltura = 0f;
+	public static float fpLado = 0.50f, fpAltura = -0.30f, fpAdelante = 0.85f, fpInclinacion = 45f, fpEscala = 0.35f;
+	public static boolean estela = true, estelaSoloPoder = false;
+	public static float grosorEstela = 0.12f, vidaEstela = 25f;
+	// Común
+	public static float brillo = 1.0f;
+	public static boolean colorPersonalizado = false;
+	public static int rojo = 255, verde = 255, azul = 255;
 
 	private static long ultimaModificacion = -1;
 	private static int contador = 0;
@@ -109,17 +108,19 @@ public class RunaConfig {
 			ultimaModificacion = Files.getLastModifiedTime(FILE).toMillis();
 			Datos d = GSON.fromJson(Files.readString(FILE), Datos.class);
 			if (d == null) d = new Datos();
+
+			// Jugadores
 			tamano = clamp(d.tamano, 0.2f, 20f);
 			altura = clamp(d.altura, -5f, 30f);
 			distancia = clamp(d.distancia, -10f, 20f);
 			runa = d.runa == null ? "" : d.runa.trim();
+			// Mobs
 			mobsActivos = d.mobsActivos;
 			tamanoMobs = clamp(d.tamanoMobs, 0.2f, 20f);
 			alturaMobs = clamp(d.alturaMobs, -5f, 30f);
 			distanciaMobs = clamp(d.distanciaMobs, -10f, 20f);
 			runaMobs = d.runaMobs == null ? "" : d.runaMobs.trim();
-			brillo = clamp(d.brillo, 0f, 3f);
-			colorPersonalizado = d.colorPersonalizado;
+			// Efectos
 			flechaPoder = d.flechaPoder;
 			rayosObjetos = d.rayosObjetos;
 			rayosEnMano = d.rayosEnMano;
@@ -130,6 +131,7 @@ public class RunaConfig {
 			escalaRayos = clamp(d.escalaRayos, 0.2f, 5f);
 			escalaAnillos = clamp(d.escalaAnillos, 0.2f, 5f);
 			escalaFlecha = clamp(d.escalaFlecha, 0.2f, 5f);
+			escalaLanzado = clamp(d.escalaLanzado, 0.1f, 5f);
 			delanteFlecha = clamp(d.delanteFlecha, 0f, 10f);
 			alturaFlecha = clamp(d.alturaFlecha, -5f, 5f);
 			alturaRayos = clamp(d.alturaRayos, -5f, 5f);
@@ -142,25 +144,13 @@ public class RunaConfig {
 			fpAdelante = clamp(d.fpAdelante, 0f, 4f);
 			fpInclinacion = clamp(d.fpInclinacion, -180f, 180f);
 			fpEscala = clamp(d.fpEscala, 0.05f, 5f);
-			escalaLanzado = clamp(d.escalaLanzado, 0.1f, 5f);
 			estela = d.estela;
 			estelaSoloPoder = d.estelaSoloPoder;
 			grosorEstela = clamp(d.grosorEstela, 0.01f, 1f);
 			vidaEstela = clamp(d.vidaEstela, 2f, 200f);
-			estelaRgb = parseColor(d.colorEstela);
-			tamanoRayos = clamp(d.tamanoRayos, 0.1f, 6f);
-			tamanoAnillos = clamp(d.tamanoAnillos, 0.1f, 6f);
-			tamanoRunaFlecha = clamp(d.tamanoRunaFlecha, 0.1f, 6f);
-			fpLado = clamp(d.fpLado, -3f, 3f);
-			fpAltura = clamp(d.fpAltura, -3f, 3f);
-			fpAdelante = clamp(d.fpAdelante, 0f, 4f);
-			fpInclinacion = clamp(d.fpInclinacion, -180f, 180f);
-			fpEscala = clamp(d.fpEscala, 0.05f, 5f);
-			escalaLanzado = clamp(d.escalaLanzado, 0.1f, 5f);
-			estela = d.estela;
-			estelaTodas = d.estelaTodas;
-			anchoEstela = clamp(d.anchoEstela, 0.01f, 2f);
-			duracionEstela = Math.max(2, Math.min(200, d.duracionEstela));
+			// Común
+			brillo = clamp(d.brillo, 0f, 3f);
+			colorPersonalizado = d.colorPersonalizado;
 			setColorRgb(parseColor(d.color));
 		} catch (Exception e) {
 			// Si el archivo tiene un error, se conservan los valores anteriores
@@ -180,8 +170,6 @@ public class RunaConfig {
 			d.alturaMobs = alturaMobs;
 			d.distanciaMobs = distanciaMobs;
 			d.runaMobs = runaMobs;
-			d.brillo = brillo;
-			d.colorPersonalizado = colorPersonalizado;
 			d.flechaPoder = flechaPoder;
 			d.rayosObjetos = rayosObjetos;
 			d.rayosEnMano = rayosEnMano;
@@ -192,6 +180,7 @@ public class RunaConfig {
 			d.escalaRayos = escalaRayos;
 			d.escalaAnillos = escalaAnillos;
 			d.escalaFlecha = escalaFlecha;
+			d.escalaLanzado = escalaLanzado;
 			d.delanteFlecha = delanteFlecha;
 			d.alturaFlecha = alturaFlecha;
 			d.alturaRayos = alturaRayos;
@@ -204,25 +193,12 @@ public class RunaConfig {
 			d.fpAdelante = fpAdelante;
 			d.fpInclinacion = fpInclinacion;
 			d.fpEscala = fpEscala;
-			d.escalaLanzado = escalaLanzado;
 			d.estela = estela;
 			d.estelaSoloPoder = estelaSoloPoder;
 			d.grosorEstela = grosorEstela;
 			d.vidaEstela = vidaEstela;
-			d.colorEstela = String.format("#%06X", estelaRgb);
-			d.tamanoRayos = tamanoRayos;
-			d.tamanoAnillos = tamanoAnillos;
-			d.tamanoRunaFlecha = tamanoRunaFlecha;
-			d.fpLado = fpLado;
-			d.fpAltura = fpAltura;
-			d.fpAdelante = fpAdelante;
-			d.fpInclinacion = fpInclinacion;
-			d.fpEscala = fpEscala;
-			d.escalaLanzado = escalaLanzado;
-			d.estela = estela;
-			d.estelaTodas = estelaTodas;
-			d.anchoEstela = anchoEstela;
-			d.duracionEstela = duracionEstela;
+			d.brillo = brillo;
+			d.colorPersonalizado = colorPersonalizado;
 			d.color = String.format("#%02X%02X%02X", rojo, verde, azul);
 			Files.writeString(FILE, GSON.toJson(d));
 			ultimaModificacion = Files.getLastModifiedTime(FILE).toMillis();

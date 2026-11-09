@@ -132,53 +132,6 @@ public class RunaMenu {
 				.build());
 
 
-		// --- Tamaños de los efectos (en porcentaje) ---
-		fx.addEntry(e.startIntSlider(Component.literal("Tamaño de la runa de la flecha"), Math.round(RunaConfig.tamanoRunaFlecha * 100), 20, 400)
-				.setDefaultValue(100)
-				.setTextGetter(v -> Component.literal(v + " %"))
-				.setSaveConsumer(v -> RunaConfig.tamanoRunaFlecha = v / 100f)
-				.build());
-
-		fx.addEntry(e.startIntSlider(Component.literal("Tamaño de los rayos"), Math.round(RunaConfig.tamanoRayos * 100), 20, 500)
-				.setDefaultValue(100)
-				.setTextGetter(v -> Component.literal(v + " %"))
-				.setSaveConsumer(v -> RunaConfig.tamanoRayos = v / 100f)
-				.build());
-
-		fx.addEntry(e.startIntSlider(Component.literal("Tamaño de los anillos del tridente"), Math.round(RunaConfig.tamanoAnillos * 100), 20, 400)
-				.setDefaultValue(100)
-				.setTextGetter(v -> Component.literal(v + " %"))
-				.setSaveConsumer(v -> RunaConfig.tamanoAnillos = v / 100f)
-				.build());
-
-		// --- Haz de luz de la flecha ---
-		fx.addEntry(e.startBooleanToggle(Component.literal("Haz de luz en la trayectoria de la flecha"), RunaConfig.estela)
-				.setDefaultValue(true)
-				.setSaveConsumer(v -> RunaConfig.estela = v)
-				.build());
-
-		fx.addEntry(e.startBooleanToggle(Component.literal("Haz en todas las flechas (apagado: solo arco con Poder)"), RunaConfig.estelaTodas)
-				.setDefaultValue(false)
-				.setSaveConsumer(v -> RunaConfig.estelaTodas = v)
-				.build());
-
-		fx.addEntry(e.startIntSlider(Component.literal("Grosor del haz"), Math.round(RunaConfig.anchoEstela * 100), 2, 80)
-				.setDefaultValue(12)
-				.setTextGetter(v -> Component.literal(String.format("%.2f bloques", v / 100f)))
-				.setSaveConsumer(v -> RunaConfig.anchoEstela = v / 100f)
-				.build());
-
-		fx.addEntry(e.startIntSlider(Component.literal("Duración del haz"), RunaConfig.duracionEstela, 4, 80)
-				.setDefaultValue(16)
-				.setTextGetter(v -> Component.literal(String.format("%.1f s", v / 20f)))
-				.setSaveConsumer(v -> RunaConfig.duracionEstela = v)
-				.build());
-
-		fx.addEntry(e.startColorField(Component.literal("Color del haz"), RunaConfig.estelaRgb)
-				.setDefaultValue(0xBFE8FF)
-				.setSaveConsumer(c -> RunaConfig.estelaRgb = c)
-				.build());
-
 		fx.addEntry(e.startBooleanToggle(Component.literal("Anillos de runas en el tridente"), RunaConfig.anillosTridente)
 				.setDefaultValue(true)
 				.setSaveConsumer(v -> RunaConfig.anillosTridente = v)
